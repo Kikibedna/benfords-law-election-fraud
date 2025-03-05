@@ -1,0 +1,9 @@
+2024/09/01
+- change of citation style from ISO-690 to APA 7
+- supplementary information in the introduction of the template
+
+2022/10/05
+- removed JEL classification
+
+2022/06/25
+- first version

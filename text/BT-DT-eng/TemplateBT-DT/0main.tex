@@ -1,0 +1,181 @@
+%%% One-side print:
+\documentclass[11pt,a4paper]{report}
+\usepackage[top=25mm,bottom=25mm,right=25mm,left=30mm,head=12.5mm,foot=12.5mm]{geometry}
+\let\openright=\clearpage
+
+\usepackage{ifthen}
+\usepackage{caption} % sources in captions
+\newcommand{\source}[1]{\caption*{ \raggedleft \textit{Source{#1}}} }
+
+% poznámky enviroment
+\newenvironment{koment}%
+        {%
+            \ifthenelse{\isundefined{\showtodos}}%
+                    {\expandafter\comment}%
+                    {\par \centering \color{blue}{} \em }%
+                    }%
+         {%
+            \ifthenelse{\isundefined{\showtodos}}%
+                    {\expandafter\endcomment}%
+                    {\par \centering \color{blue}{}%
+                    }%
+          }
+
+
+\newcommand{\showtodos}{} %zakomentovat pro skrytí poznámek! #TODO
+
+\usepackage{pgfplots} %% tikz pro kresleni grafu
+
+% \usepackage{natbib} %% hraju si s citacema 
+
+% priklady: 
+    % citeauthor*{jon90} --> Jones, Baker, and Williams
+    
+    % \citet*{jon90} --> Jones, Baker, and Williams (1990)
+    
+    % \citep*{jon90} --> (Jones, Baker, and Williams, 1990)
+    
+    % \citealt{jon90} --> Jones, Baker, and Williams, 1990
+
+% workaround: 
+
+% \newcommand{\citet}[1]{\citeauthor{#1} \shortcite{#1}}
+% \newcommand{\citep}{\cite}
+% \newcommand{\citealp}[1]{\citeauthor{#1} \citeyear{#1}}
+
+
+%%% Two-side print:
+%\documentclass[11pt,a4paper,twoside,openright]{report}
+%\usepackage[top=25mm,bottom=25mm,right=25mm,left=30mm,head=12.5mm,foot=12.5mm]{geometry}
+%\let\openright=\cleardoublepage
+
+%%% DEFINITION OF BASIC VARIABLES
+\def\TypPrace{BP}                % bakalářská práce/bachelor thesis
+%\def\TypPrace{DP}               % diplomová práce/master thesis
+%\def\Jazyk{cze}                  % čeština/czech
+%\def\Jazyk{slo}                 % slovenština/slovak
+\def\Jazyk{eng}                 % angličtina/english
+
+%%% Definition of some useful macros
+\input{makra}
+
+%%% Název práce v jazyce práce (přesně podle zadání)
+%%% Title of the thesis in the language used in the text (exact according to assignment)
+\def\NazevPrace{Benford’s Law and the Statistical Detection of Election Fraud}
+
+%%% Jméno autora
+%%% Author's name - First name Surname
+\def\AutorPrace{Kristýna Bednářová}
+
+%%% Rok odevzdání a měsíc (slovně)
+%%% Year of submission and month (verbally) - month YYYY
+\def\DatumOdevzdani{May 2025}
+
+%%% Vedoucí práce: Jméno a příjmení s~tituly
+%%% Supervisor: First name and surname with titles
+\def\Vedouci{Mgr. Jana Cibulková, Ph.D.}
+
+%%% Konzultant práce: Jméno a příjmení s~tituly
+%%% Consultant: First name and surname with titles
+\def\Konzultant{full consultant’s name (incl. degrees)}
+
+%%% Studijní program
+%%% Study program
+\def\StudijniProgram{Mathematical Methods in Economics}
+
+%%% Studijní program - specializace
+%%% Study program - specialization
+\def\Specializace{Data Analyses and Modeling}
+
+%%% Nepovinné poděkování (vedoucímu práce, konzultantovi, tomu, kdo zapůjčil software, literaturu apod.)
+%%% Optional thanks (the supervisor, the consultant, the borrower of software, literature, etc.)
+\def\Podekovani{%
+Thanks.
+}
+
+%%% Abstract (recommended range of about 150-250 words; this is not a thesis assignment)
+\def\Abstrakt{%
+Abstract.
+}
+\def\KlicovaSlova{keyword, important term, another topic, and another one}
+
+
+%%% Titulní strana a různé povinné informativní strany
+%%% Title page and various mandatory information pages
+\begin{document}
+\include{beginning}
+
+%%% Strana s automaticky generovaným obsahem práce
+%%% A page with automatically generated content of the thesis
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+%%% Seznam obrázků v práci
+%%% List of figures in the thesis
+\openright
+\listoffigures
+
+Note: The list of figures should be used if the number of figures in the text is more than 20.
+
+%%% Seznam tabulek v práci (volitelně)
+%%% List of tables in the thesis (optionally)
+\clearpage
+\listoftables
+
+Note: The list of tables should be used if the number of tables in the text is more than 20.  
+
+%%% Seznam zdrojových kódů v práci (volitelně)
+%%% List of source listings in the thesis (optionally)
+\clearpage
+\lstlistoflistings
+Note: The list of programme code excerpts should be used if the number of programme codes excerpts in the text is more than 20.
+
+%%% Seznam zkratek v práci (volitelně)
+%%% List of abbreviations in the thesis (optionally)
+\include{0abbreviations}
+
+
+%%% Jednotlivé kapitoly práce jsou pro přehlednost uloženy v samostatných souborech
+%%% The individual chapters of the thesis are stored in separate files for clarity
+
+{%
+\pagestyle{plain}
+%\include{9recommendation}
+\include{1introduction}}
+
+
+%\include{9tables-figures}
+%\include{9bibliography-management}
+%\include{9pdf-a}
+% \include{...}
+% \include{...}
+
+{%
+\pagestyle{fancyx}
+
+\include{2-1Benfords-Law-INTRODUCTION}
+\include{2-2Statistika-BL}
+\include{2-3Aplikace}
+}
+
+{%
+\pagestyle{plain}
+\include{5conclusion}
+}
+
+%%% Seznam použité literatury
+%%% Bibliography
+\include{bibliography}
+
+%%% Přílohy k práci, existují-li. Každá příloha musí být alespoň jednou
+%%% odkazována z vlastního textu práce. Přílohy se číslují.
+%%% Attachments to thesis, if any. Each attachment must be referenced at 
+%%% least once in your own text. The appendices are numbered.
+\part*{\Prilohy\thispagestyle{empty}}
+\appendix
+\include{app01}
+\include{app02}
+% \include{...}
+% \include{...}
+
+\end{document}

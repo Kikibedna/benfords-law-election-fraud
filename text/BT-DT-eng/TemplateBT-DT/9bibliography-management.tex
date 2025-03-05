@@ -1,0 +1,78 @@
+\chapter{Bibliography management}
+
+The template assumes the use of This template assumes the use of a bibliographic 
+database in \BibTeX\ format for greater flexibility. The use of a bibliographic 
+database is not a necessary condition, the standard environment 
+\texttt{thebibliography} can also suffice. However, in such a case, it is 
+necessary to make interventions in some files, as shown below.
+
+\section{Use of bibliographic database}
+
+\begin{enumerate}
+
+\item \textbf{Package \verb'biblatex', APA-7}\\
+The template uses settings via the \verb|biblatex| package to process the 
+bibliographic database and also guarantees the use of the \textbf{APA-7} 
+citation standard. All settings are listed in the file \texttt{biblatex-setup.tex}.
+
+\item\textbf{Change the database name}\\
+The template assumes a database stored in the file \texttt{bibliography.bib}. If 
+the database has a different name, then it is necessary to change the value of 
+the command parameter \verb'\bibliography' in the file \texttt{biblatex-setup.tex}.
+
+\item\textbf{Change citation style}\\
+By default, in-text citations are given in a combination of last name and year 
+(Harvard style). You can switch to references by number by changing the 
+file \nolinkurl{biblatex-setup.tex}, where the comment character in the lines is 
+canceled:
+\begin{verbatim}
+% ,citestyle=numeric-comp
+...
+%\makeatletter
+%\RequireBibliographyStyle{numeric}
+%\makeatother
+\end{verbatim}
+
+\item \textbf{Using the popular citation manager Zotero}:
+\begin{enumerate}
+\item more information -- \href{https://www.zotero.org/}{homepage}, \href{https://knihovna.vse.cz/citace/nastroje/zotero/}{information from the VŠE Library}
+\item Installation -- \url{https://www.zotero.org/download/}
+\item Installing the browser connector -- Firefox, Chrome, Edge, Safari
+\item Better BibTeX for Zotero extension -- \url{https://retorque.re/zotero-better-bibtex/}:
+ \begin{enumerate}
+ \item Download the .xpi file
+ \item And then \texttt{Tools--Add-ons--Install Add-on From File}
+ \end{enumerate}
+\item \href{https://formadoct.doctorat-bretagneloire.fr/zotero_workshop/latex}{Zotero workshop or Zotero\&{}\LaTeX\ step by step}
+\end{enumerate}
+\end{enumerate}
+
+
+\section{Use of the environment \texttt{thebibliography}}
+\begin{enumerate}
+\item In the file \texttt{makra.tex} at the beginning delete these lines:
+\begin{verbatim}
+%%% Nastavení pro použití samostatné bibliografické databáze.
+%%% Settings for using a separate bibliographic database.
+\input biblatex-setup
+\end{verbatim}
+
+\item In the file \texttt{bibliography.tex} delete the line 
+\verb'\printbibliography' and remove the comment flag in the next section 
+containing the environment \texttt{thebibliography.}
+
+\item Individual items \verb\bibitem\ must be compiled according to the APA-7 
+standard. Instructional examples are available for example here: 
+\url{https://knihovna.vse.cz/citace/priklady/?norm=apa}. 
+\end{enumerate}
+
+
+\section{How cite in the text}
+\begin{center}
+\begin{tabularx}{\textwidth}{l@{~~$\longrightarrow$~~}X}
+\verb|\parencite{Cermak2018}|&\parencite{Cermak2018}\\
+\verb|\parencite{Hladik2018,Jasek2018}|&\parencite{Hladik2018,Jasek2018}\\
+\verb|\parencite[chap. 3]{Pecakova2018}|&\parencite[chap. 3]{Pecakova2018}\\
+\verb|\parencite{Furtuna2023}|&\parencite{Furtuna2023}\\
+\end{tabularx}
+\end{center}

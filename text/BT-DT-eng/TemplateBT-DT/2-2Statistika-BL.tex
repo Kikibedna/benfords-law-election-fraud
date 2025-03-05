@@ -1,4 +1,4 @@
-\chapter{Methodology}
+\chapter{Used Methods and Theory}
 
 The main focus of this chapter is to explain the methods used, discuss the theory behind them as well as the underlying assumptions. 
 
@@ -86,7 +86,7 @@ This is explained by the following equation
 describing third and following position relative frequencies, again with the assumption of independency of digit occurrences. And \uv{\emph{the Benford distribution converges to a uniform
 multinomial distribution}} as put in \citeauthor{Hronova2023} in \citeyear{Hronova2023}. 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \caption{Theoretical frequencies of the third leading digits}  
     \label{fig:third-digit-law}
@@ -112,7 +112,12 @@ multinomial distribution}} as put in \citeauthor{Hronova2023} in \citeyear{Hrono
     \source{: \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}; processing: author}
 \end{figure}
 
+
+
+
 \begin{koment}
+.....................................
+
 * $\downarrow$ Doplnit jak se delaji tyto navrhovane kroky podle Kossovskyho $\downarrow$ *
 
 First-digits distribution
@@ -152,10 +157,33 @@ Comment on the conditions of what the dataset has to meet!
 %Aby BZ platil, musí být čísla - soubor čísel, takzvaně \emph{benfordovský} - dostatečně velký a splňovat podmínku \ref{BZ-podminka} \cite{kossovsky2014benford}. %section 10
 \end{koment}
 
-\section{Probability distribution function}
+\section{Probability density function}
 
-Being one of the defining features of a random variable, the PDF is very important for probabilistic and statistics analyses. It is a non negative function, which integral (sum under its curve) equals to one. 
+Being one of the defining features of a random variable $X$, its PDF is very important for further probabilistic and statistics analyses. It is a non negative function, which sum equals to one. 
 
+For continuos variable is it defined as 
+
+\begin{equation}
+    P(x_1 \le X \le x_2) = \int\limits_{x_1}^{x_2} f (x) dx
+\end{equation}
+
+The distribution function is defined as 
+
+\begin{equation}
+    F(x) = P(X \le x), \quad \forall x \in R
+\end{equation}
+
+\begin{equation}
+    F(x) = \int\limits_{-\infty}^{x} f (t) dt, \quad -\infty <x<\infty
+\end{equation}
+
+\begin{koment}
+    neklesajici, v $-\infty$ je 0, v $\infty$ je 1
+
+    vymyslet jak to pojmout a propojit? 
+\end{koment}
+
+\cite{Marek2024}
 
 \section{Hypothesis testing}
 
@@ -170,10 +198,28 @@ To check the compliance of the data to the BL, we can use the $\chi^2$ goodness 
 \end{equation}
 
 \begin{align*}
-    \text{where } &\pi_d \text{ is the theoretical frequency under BL distribution} \\
-    &p_d \text{ is the empirical frequency from the data} \\ 
-    \text{and } &n \text{ is the sample size}
+    \text{where } &\pi_d \text{ is the theoretical frequency under BL distribution}, \\
+    &p_d \text{ is the empirical frequency from the data, and} \\ 
+    &n \text{ is the sample size}
 \end{align*} 
 
-as recommended in \citeauthor{Hronova2023}, \citeyear{Hronova2023}.
+as recommended in \citeauthor{Hronova2023}, \citeyear{Hronova2023} and  \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}. %asi i Kossovsky
 
+
+
+
+\section{Elections} 
+
+\subsection{Presidential elections}
+
+\subsection{Gathering and analysing results}
+
+\begin{koment}
+Volební okrsky jsou koncipovány tak, aby byly cca po 1000 lidech. 
+
+https://mv.gov.cz/volby/clanek/volebni-okrsky.aspx (zveřejněno dne 19. července 2021, převzato dne 7.2.2025) 
+
+https://csu.gov.cz/rso/volebni-kraje-volebni-obvody-a-volebni-okrsky 
+\end{koment}
+
+\subsection{Differences between elections in analysed countries} 
