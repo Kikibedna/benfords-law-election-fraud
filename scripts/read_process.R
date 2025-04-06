@@ -3,7 +3,7 @@ library(stringr)
 library(dplyr)
 library(ggplot2)
 
-data_dir <- "data-input"
+data_dir <- "../data-input"
 
 load_csv <- function(file_path){
   data <- read_csv2(file_path, col_names = F)
@@ -46,15 +46,47 @@ fun <- log10(1 + 1/x2)
 hist(first_digits, freq = F, probability = T) 
 lines(x2, fun, col = 2, lwd = 2)
 
+# first_digits_df <- data.frame(table(first_digits)) |> 
+#   mutate(Total =  sum(first_digits_df$Freq), 
+#          rel_freq = Freq/SumFreq, 
+#          BL = log10(1 + (1/as.numeric(first_digits))))
+
+vec <- first_two_digits[first_two_digits > 9 & first_two_digits < 100]
+
+
+BL_first_table <- function(vec){
+  Total <- length(vec)
+  data.frame(table('digit' = vec), Total) |> 
+    mutate(RelFreq = Freq/Total, 
+           BL = log10(1 + (1/as.numeric(digit))), 
+           diff = RelFreq-BL)
+}
+
+table(first_two_digits[first_two_digits>9 & first_two_digits < 100])
+
+BL_first_table(first_digits) |> 
+  ggplot() + geom_bar(aes(x=digit, y=RelFreq, fill = T), stat = 'identity', position = 'dodge') + 
+  geom_bar(aes(x=digit, y=BL, , alpha = 0.5),  stat = 'identity', position = 'dodge')
+
+BL_first_table(first_two_digits[first_two_digits > 9 & first_two_digits < 100]) |> 
+  ggplot() + geom_bar(aes(x=X, y=RelFreq, fill = T), stat = 'identity', position = 'dodge') + 
+  geom_bar(aes(x=X, y=BL),  stat = 'identity', position = 'dodge')
+
+tableA <- BL_first_table(first_two_digits[first_two_digits > 9 & first_two_digits < 100]) 
+
+plot(x=tableA$X, y=tableA$RelFreq)
+lines(x=tableA$X, y=tableA$BL, type = 'p', col = 'red')
+
+
 hist(first_two_digits[first_two_digits>9], freq = F, probability = T)
-hist(first_three_digits[first_three_digits>99], freq = F, probability = T)
+hist(first_three_digits[first_three_digits>99], freq = F, probability = T) 
 hist(first_four_digits[first_four_digits>999], freq = F, probability = T)
 hist(first_five_digits[first_five_digits>9999], freq = F, probability = T)
 
 
-log10(1 + 1/x) 
+log10(1 + 1/as.numeric(tableA$X)) 
 
-
+BL_first_table(first_digits)
 
 # Histogram
 hist(x, prob = TRUE, col = "white",
