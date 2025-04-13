@@ -19,9 +19,13 @@ names(radek) <- names(data_obecni)
 data_obecni <- rbind(data_obecni, (radek))
 
 
-# First significant digits  ----------------
+# ANDERJ BABIS   ----------------
+
+
+## First significant digits  ----------------
 
 numbers <- data_obecni$Andrej_Babis #unname(data_obecni$Petr_Pavel)))#, unname(data_obecni$Andrej_Babis))) #, unname(data_obecni$celkem)
+OMV(data_obecni$Petr_Pavel)
 
 first_digits <- digits(numbers, first = 1)
 first_two_digits <- digits(numbers,first = 2)
@@ -38,7 +42,7 @@ save_png("CZ23-AB-first_digits")
 
 
 
-## chisq test -------
+### chisq test -------
 
 table_obecniCR2 <- BL_leading_digit_table(first_digits) |> mutate(frac = (diff^2)/BL, 
                                                                   ndpi = BL*Freq, 
@@ -70,7 +74,7 @@ chisq.test(x=table_obecniCR2$Freq, p=table_obecniCR2$BL, rescale.p = F)
 # now on the pvalue <--
 
 
-# First two digits --------
+## First two digits --------
 
 plot_BL_RelFreq_bar(first_two_digits)
 save_png("CZ23-AB-first_two_digits")
@@ -78,19 +82,8 @@ save_png("CZ23-AB-first_two_digits")
 
 compliance_test_chisq(first_two_digits)
 
-# First three digits --------
 
-plot_BL_RelFreq_bar(first_three_digits)
-
-
-table_obecniCR2 <-BL_leading_digit_table(first_three_digits) |> mutate(frac = (diff^2)/BL, 
-                                                                     ndpi = BL*Freq, 
-                                                                     npi = BL*Total, 
-                                                                     absdiff = Freq-npi)
-
-chisq.test(x=table_obecniCR2$Freq, p=table_obecniCR2$BL, rescale.p = T)
-
-# Last digits --------
+## Last digits --------
 
 last_digits <- digits(numbers, last = 1)
 last_two_digits <- digits(numbers,last = 2)
@@ -99,14 +92,108 @@ last_two_digits <- digits(numbers,last = 2)
 # last_five_digits <- digits(numbers,last = 5)
 
 BL_last_digit_table(last_digits)
+
 plot_BL_RelFreq_bar(last_digits, last = T)
 save_png("CZ23-AB-last_digits")
+
+compliance_test_chisq(last_digits, last = T)
+
+
+## Last two digits --------
+
+BL_last_digit_table(last_two_digits)
+
+plot_BL_RelFreq_bar(last_two_digits, last = T)
+save_png("CZ23-AB-last_two_digits")
+
+compliance_test_chisq(last_two_digits, last = T)
+
+
+
+# PETR PAVEL  ----------------
+## First significant digits  ----------------
+
+numbers <- data_obecni$Petr_Pavel #unname(data_obecni$Petr_Pavel)))#, unname(data_obecni$Andrej_Babis))) #, unname(data_obecni$celkem)
+
+OMV(numbers)
+
+first_digits <- digits(numbers, first = 1)
+first_two_digits <- digits(numbers,first = 2)
+# first_three_digits <- digits(numbers,first = 3)
+# first_four_digits <- digits(numbers,first = 4)
+# first_five_digits <- digits(numbers,first = 5)
+
+# x2 <- seq(min(first_sign_digits), max(first_sign_digits), length = 50)
+# fun <- P_BL_FD(x2)
+# hist(first_sign_digits, freq = F, probability = T, breaks = 11) 
+# lines(x2, fun, col = 2, lwd = 2)
+plot_BL_RelFreq_bar(first_digits)
+save_png("CZ23-PP-first_digits")
+
+
+
+### chisq test -------
+
+table_obecniCR2 <- BL_leading_digit_table(first_digits) |> mutate(frac = (diff^2)/BL, 
+                                                                  ndpi = BL*Freq, 
+                                                                  npi = BL*Total, 
+                                                                  absdiff = Freq-npi)
+sum(table_obecniCR2$absdiff)
+
+# assumption of the chiqs test
+prod(table_obecniCR2$ndpi > 5) == 1 
+prod(table_obecniCR2$npi > 5) == 1 
+
+n <- table_obecniCR2$Total |> unique()
+
+G <- n * sum(table_obecniCR2$frac)
+alpha <- 0.05
+
+G > pchisq(q = 1-alpha, df = 8) # toto je confusing melo by to byt ze kdyz je G vetsi nez to chi tak zamitam null :) 
+
+chisq.test(x=table_obecniCR2$Freq, p=table_obecniCR2$BL, rescale.p = F)
+
+# je-li p-hodnota > alpha: nezamitam H0 
+# je-li p-hodnota <= alpha: zamitam H1
+
+# H0: empirical distribution follows the theoretical distr. 
+# H!: empirical distribution does not follow the theoretical distr. 
+# result: false, the G (test statistics) falls into the acceptance region, not the rejection region 
+# which means we reject the alternative hypothesis and we can say this distribiton follows the BL :) 
+
+# now on the pvalue <--
+
+
+## First two digits --------
+
+plot_BL_RelFreq_bar(first_two_digits)
+save_png("CZ23-PP-first_two_digits")
+
+
+compliance_test_chisq(first_two_digits)
+
+
+## Last digits --------
+
+last_digits <- digits(numbers, last = 1)
+last_two_digits <- digits(numbers,last = 2)
+# last_three_digits <- digits(numbers,last = 3)
+# last_four_digits <- digits(numbers,last = 4)
+# last_five_digits <- digits(numbers,last = 5)
+
+BL_last_digit_table(last_digits)
+
+plot_BL_RelFreq_bar(last_digits, last = T)
+save_png("CZ23-PP-last_digits")
+
 compliance_test_chisq(last_digits, last = T)
 
 
 # Last two digits --------
 
 BL_last_digit_table(last_two_digits)
+
 plot_BL_RelFreq_bar(last_two_digits, last = T)
-save_png("CZ23-AB-last_two_digits")
+save_png("CZ23-PP-last_two_digits")
+
 compliance_test_chisq(last_two_digits, last = T)

@@ -2,6 +2,7 @@ library(readr)
 library(stringr)
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 
 # load 
 load_csv <- function(file_path){ # CSU data load and preprocess
@@ -53,7 +54,7 @@ BL_leading_digit_table <- function(vec){
   Total <- length(vec)
   data.frame(table('digit' = vec), Total) |> 
     mutate(RelFreq = Freq/Total, 
-           BL = P_BL_FDs(as.numeric(as.character(digit))),
+           BL = P_BL_FD(as.numeric(as.character(digit))),
            diff = RelFreq-BL)
 }
 
@@ -86,6 +87,17 @@ compliance_test_chisq <- function(vec, last = F){
 
 # graphics 
 
+barvy <- list(
+  leading_digits = c(
+    BL = '#dddddd', 
+    RelFreq = 'darkblue'
+  ), 
+  last_digits = c(
+    BL = '#dddddd', 
+    RelFreq = '#7F1734'
+  )
+)
+
 save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady by se hodilo dat credit do prace... 
   base_dir <- getwd()
   img_dir <- config::get("graphics") 
@@ -113,16 +125,52 @@ plot_BL_RelFreq_bar_blend <- function(digits, last = F){ #ukladam, kdyby se mi z
 plot_BL_RelFreq_bar <- function(digits, last = F){
   if(last){
     BL_table <- BL_last_digit_table(digits) 
+    position <- "bottom"
+    colors = barvy$last_digits
   }else {
     BL_table <- BL_leading_digit_table(digits) 
+    position <- c(0.82, 0.90)
+    colors = barvy$leading_digits
   }
+  BL_table <- BL_table |> mutate(digit = as.numeric(as.character(digit))) |> 
+    select(-diff)
   
-  BL_table |> select(-diff)|> pivot_longer(cols = c('RelFreq', 'BL'), names_to = "law", values_to = 'freq') |> 
-    ggplot(aes(x=digit, y=freq, fill = as.factor(law))) + geom_bar(stat = 'identity', position = 'dodge') + 
-    theme_minimal() + scale_fill_manual(values=c(BL = "black", RelFreq = "cornflowerblue"), name = NULL)
+  n.breaks <- case_when(
+    log10(max(BL_table$digit)+1) <= 1 ~ 10, 
+    log10(max(BL_table$digit)+1) >= 2 & log10(max(BL_table$digit)+1) < 3 ~ 25,
+    T ~ 100, 
+  )
   
+  BL_table |> 
+    pivot_longer(cols = c("BL", "RelFreq"), names_to = "law", values_to = 'relative frequency') |> 
+    ggplot(aes(x=digit, y=`relative frequency`, fill = as.factor(law))) + 
+    geom_bar(stat = 'identity', position = 'dodge') + 
+    theme_minimal() + 
+    scale_x_continuous(n.breaks = n.breaks) +
+    scale_fill_manual(values=colors, 
+                      labels = c(RelFreq = 'Observed relative frequency', 
+                                 BL = "Benford's Law"), 
+                      name = NULL)  + 
+    theme(legend.position = position,
+          legend.box.just = "right",
+          legend.box.background = element_rect(fill = "white", color="white", size=3), 
+          text=element_text(size=15, family="serif")) 
 }
 
+
+
+
+
+sample_barvy<-c("#aaaaaa","#7F1734", # last digits 
+         "#cccccc","darkblue", # first digits
+         "black","cornflowerblue", 
+         
+         # fakultni barvy
+         "#dddddd", "#009881", "#6AD1E3",
+         "#dddddd", "#A50063", "#EC298A",
+         "#dddddd", "#00659B", "#00AEEF",
+         "#F05A22" 
+         )
 
 
 
