@@ -3,6 +3,7 @@ library(stringr)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(patchwork)
 
 # load 
 load_csv <- function(file_path){ # CSU data load and preprocess
@@ -69,10 +70,21 @@ BL_last_digit_table <- function(vec){
 
 # analyze 
 OMV <- function(X){ # OMV > 3 condition to use first digit BL 
-  data.frame(log90th = log10(quantile(X, 0.9)),
-             log10th = log10(quantile(X, 0.1)),
-             OMV =  unname(log10(quantile(X, 0.9)) - log10(quantile(X, 0.1))),
-             suitable = unname(log10(quantile(X, 0.9)) - log10(quantile(X, 0.1))>3))
+  log90th <- unname(log10(quantile(X, 0.9)))
+  log10th <- unname(log10(quantile(X, 0.1)))
+  data.frame(log90th,
+             log10th, 
+             OMV =  unname(log90th-log10th),
+             suitable = (log90th-log10th>3))
+}
+
+OOM <- function(X){ # OMV > 3 condition to use first digit BL 
+  log10max <- unname(log10(max(X)))
+  log10min <- unname(log10(min(X)))
+  data.frame(log10max,
+             log10min,
+             OOM = log10max-log10min,
+             suitable = (log10max-log10min >3))
 }
 
 compliance_test_chisq <- function(vec, last = F){
@@ -87,16 +99,29 @@ compliance_test_chisq <- function(vec, last = F){
 
 # graphics 
 
+# barvy <- list(
+#   leading_digits = c(
+#     BL = '#cccccc', 
+#     RelFreq = 'darkblue'
+#   ), 
+#   last_digits = c(
+#     BL = '#cccccc', 
+#     RelFreq = '#7F1734'
+#   )
+# )
+
 barvy <- list(
   leading_digits = c(
-    BL = '#dddddd', 
-    RelFreq = 'darkblue'
-  ), 
+    BL = '#cccccc',
+    RelFreq = "#009881"#'darkblue'
+  ),
   last_digits = c(
-    BL = '#dddddd', 
-    RelFreq = '#7F1734'
+    BL = '#cccccc',
+    RelFreq = "#A50063" #'#7F1734'
   )
-)
+) 
+
+
 
 save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady by se hodilo dat credit do prace... 
   base_dir <- getwd()
@@ -122,7 +147,7 @@ plot_BL_RelFreq_bar_blend <- function(digits, last = F){ #ukladam, kdyby se mi z
   
 }
 
-plot_BL_RelFreq_bar <- function(digits, last = F){
+plot_BL_RelFreq_bar <- function(digits, title = NULL, last = F, dual = F){
   if(last){
     BL_table <- BL_last_digit_table(digits) 
     position <- "bottom"
@@ -137,6 +162,7 @@ plot_BL_RelFreq_bar <- function(digits, last = F){
   
   n.breaks <- case_when(
     log10(max(BL_table$digit)+1) <= 1 ~ 10, 
+    dual & log10(max(BL_table$digit)+1) >= 2 & log10(max(BL_table$digit)+1) < 3 ~ 25/2,
     log10(max(BL_table$digit)+1) >= 2 & log10(max(BL_table$digit)+1) < 3 ~ 25,
     T ~ 100, 
   )
@@ -146,20 +172,25 @@ plot_BL_RelFreq_bar <- function(digits, last = F){
     ggplot(aes(x=digit, y=`relative frequency`, fill = as.factor(law))) + 
     geom_bar(stat = 'identity', position = 'dodge') + 
     theme_minimal() + 
+    ggtitle(title) +
     scale_x_continuous(n.breaks = n.breaks) +
     scale_fill_manual(values=colors, 
                       labels = c(RelFreq = 'Observed relative frequency', 
                                  BL = "Benford's Law"), 
                       name = NULL)  + 
-    theme(legend.position = position,
+    theme(legend.position = position, 
           legend.box.just = "right",
           legend.box.background = element_rect(fill = "white", color="white", size=3), 
-          text=element_text(size=15, family="serif")) 
+          text=element_text(size=12, family="serif")) 
 }
 
-
-
-
+dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F){
+  plot_BL_RelFreq_bar(A, title = A_title, last = last, dual = T) + 
+    plot_BL_RelFreq_bar(B, title = B_title, last = last, dual = T) + 
+    plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect_y") & 
+    theme(legend.position = 'bottom', plot.title = element_text(hjust = 0.5, size=12)) & 
+    ylim(0, max)
+}
 
 sample_barvy<-c("#aaaaaa","#7F1734", # last digits 
          "#cccccc","darkblue", # first digits
