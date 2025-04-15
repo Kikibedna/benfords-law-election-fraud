@@ -5,7 +5,7 @@ library(ggplot2)
 library(tidyr)
 library(patchwork)
 
-# load 
+# load --------------
 load_csv <- function(file_path){ # CSU data load and preprocess
 data <- read_csv2(file_path, col_names = F)
 nazev <- str_split_1(data[1,1]$X1, " ")[1]
@@ -18,7 +18,7 @@ return(data)
 }
 
 
-# process 
+# process  --------------
 digits <- function(vec, first=0, last=0){ # vec to first digit numeric vec 
   if(last>0){
     return(as.numeric(substr(as.character(vec), 
@@ -93,11 +93,13 @@ compliance_test_chisq <- function(vec, last = F){
   } else{
     BL_table <- BL_leading_digit_table(vec)
   }
+  print("p-hodnota > alpha: nezamitam H0")
+  print("p-hodnota <= alpha: zamitam H0")
   chisq.test(x=BL_table$Freq, p=BL_table$BL, rescale.p = F)
 }
 
 
-# graphics 
+# graphics  --------------
 
 # barvy <- list(
 #   leading_digits = c(
@@ -113,11 +115,11 @@ compliance_test_chisq <- function(vec, last = F){
 barvy <- list(
   leading_digits = c(
     BL = '#cccccc',
-    RelFreq = "#009881"#'darkblue'
+    RelFreq = 'darkblue'#"#009881"#'darkblue'
   ),
   last_digits = c(
     BL = '#cccccc',
-    RelFreq = "#A50063" #'#7F1734'
+    RelFreq = '#7F1734'#"#A50063" #'#7F1734'
   )
 ) 
 
@@ -156,6 +158,7 @@ plot_BL_RelFreq_bar <- function(digits, title = NULL, last = F, dual = F){
     BL_table <- BL_leading_digit_table(digits) 
     position <- c(0.82, 0.90)
     colors = barvy$leading_digits
+    test <- compliance_test_chisq(digits)
   }
   BL_table <- BL_table |> mutate(digit = as.numeric(as.character(digit))) |> 
     select(-diff)
@@ -172,7 +175,7 @@ plot_BL_RelFreq_bar <- function(digits, title = NULL, last = F, dual = F){
     ggplot(aes(x=digit, y=`relative frequency`, fill = as.factor(law))) + 
     geom_bar(stat = 'identity', position = 'dodge') + 
     theme_minimal() + 
-    ggtitle(title) +
+    ggtitle(title) + labs(subtitle = paste("Chisq test P-value:", round(test$p.value, 5))) + 
     scale_x_continuous(n.breaks = n.breaks) +
     scale_fill_manual(values=colors, 
                       labels = c(RelFreq = 'Observed relative frequency', 
@@ -181,8 +184,11 @@ plot_BL_RelFreq_bar <- function(digits, title = NULL, last = F, dual = F){
     theme(legend.position = position, 
           legend.box.just = "right",
           legend.box.background = element_rect(fill = "white", color="white", size=3), 
-          text=element_text(size=12, family="serif")) 
+          text=element_text(size=12, family="serif"), 
+          plot.subtitle = element_text(size = 8, hjust = 0.95)) 
 }
+
+
 
 dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F){
   plot_BL_RelFreq_bar(A, title = A_title, last = last, dual = T) + 
@@ -204,5 +210,61 @@ sample_barvy<-c("#aaaaaa","#7F1734", # last digits
          )
 
 
+# Sample workflow ------------
+
+# OMV(data$total_votes)
+# OOM(data$total_votes)
+# 
+# first_digits <- digits(data$total_votes, first = 1)
+# BL_leading_digit_table(first_digits)
+# compliance_test_chisq(first_digits)
+# plot_BL_RelFreq_bar(first_digits)
+# save_png("USA24-celkem-first_digits")
+# 
+# last_digits <- digits(data$total_votes, last = 1)
+# BL_last_digit_table(last_digits)
+# compliance_test_chisq(last_digits, last = T)
+# plot_BL_RelFreq_bar(last_digits, last = T)
+# save_png("USA24-celkem-last_digits")
+# 
+# first_two_digits <- digits(data$total_votes, first = 2)
+# BL_leading_digit_table(first_two_digits)
+# compliance_test_chisq(first_two_digits)
+# plot_BL_RelFreq_bar(first_two_digits)
+# save_png("USA24-celkem-first_two_digits")
+# 
+# last_two_digits <- digits(data$total_votes, last = 2)
+# BL_last_digit_table(last_two_digits)
+# compliance_test_chisq(last_two_digits, last = T)
+# plot_BL_RelFreq_bar(last_two_digits, last = T)
+# save_png("USA24-celkem-last_two_digits")
+# 
+# 
+# OMV(data$votes_dem)
+# OOM(data$votes_dem)
+# 
+# OMV(data$votes_gop)
+# OOM(data$votes_gop)
+# 
+# 
+# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 1), A_title = "Republicans", 
+#                         B = digits(data$votes_dem, first = 1), B_title = "Democrats", 
+#                         last = F)
+# save_png("USA24-dual-first_digits")
+# 
+# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 2), A_title = "Republicans", 
+#                         B = digits(data$votes_dem, first = 2), B_title = "Democrats", 
+#                         last = F, max = 0.052)
+# save_png("USA24-dual-first_two_digits")
+# 
+# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 1), A_title = "Republicans", 
+#                         B = digits(data$votes_dem, last = 1), B_title = "Democrats", 
+#                         last = T, max = 0.12)
+# save_png("USA24-dual-last_digits")
+# 
+# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 2), A_title = "Republicans", 
+#                         B = digits(data$votes_dem, last = 2), B_title = "Democrats", 
+#                         last = T, max = 0.0155)
+# save_png("USA24-dual-last_two_digits")
 
 
