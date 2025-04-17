@@ -1,40 +1,186 @@
 \chapter{Application on Election Data} %of Benford's Law 
 
-V nasledujicím segmentu budeme analyzovat výsledky prezidentských voleb v Rusku, u kterých se předpokládá nějaký fraud, ve Spojených státech, kde můžeme být svědky \textbf{gerrymanderingu}, akorát to asi není topic této práce, když koukáme na fraud perspektivou digits... takže by tam žádný fraud být nejspíš neměl. Dále nahlédneme do Estonska, kde mají zdigitalizovaný volební systém, dá se tam volit i přes mobil, země, ke které vzhlížíme co se digitalizace týče. No a naši pouť zakončíme prezidentskými volbami v Česku, kde opět neočekáváme nějaký závratný fraud.  
+% V nasledujicím segmentu budeme analyzovat výsledky prezidentských voleb v Rusku, u kterých se předpokládá nějaký fraud, ve Spojených státech, kde můžeme být svědky \textbf{gerrymanderingu}, akorát to asi není topic této práce, když koukáme na fraud perspektivou digits... takže by tam žádný fraud být nejspíš neměl. Naši pouť zakončíme prezidentskými volbami v Česku, kde opět neočekáváme nějaký závratný fraud.  
+
+
 
 
 \section{Russia}
-https://www.theguardian.com/news/datablog/2012/mar/05/russia-putin-voter-fraud-statistics
-
+% https://www.theguardian.com/news/datablog/2012/mar/05/russia-putin-voter-fraud-statistics
+% https://cedarus.io/data/elections
 
 \section{USA} 
+
+% \url{https://github.com/tonmcg/US_County_Level_Election_Results_08-24}
+
+% \cite{tony_mcgovern_2025_14223604}
+
+% \url{https://www.osce.org/files/f/documents/d/e/588772.pdf} - zavery od OSCE, pokud budu chtit vic \url{https://www.osce.org/odihr/elections/usa/572581}
+
+
+\begin{figure}[h]
+    \centering
+    \caption{The results of the presidential election in the USA in 2024}
+    \includegraphics[width=0.75\linewidth]{BT-DT-eng/TemplateBT-DT/img/us_election_results.png}
+    \label{fig:USA24-results}
+    \source{:  \citeauthor{tony_mcgovern_2025_14223604}, \citeyear{tony_mcgovern_2025_14223604}}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{First digit distributions from total votes in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-celkem-first_digits.png}
+    \label{fig:USA24-celkem-first_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{First two digits distributions from total votes in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-celkem-first_two_digits.png}
+    \label{fig:USA24-celkem-first_two_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{Last digit distributions from total votes in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-celkem-last_digits.png}
+    \label{fig:USA24-celkem-first_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{Last two digits distributions from total votes in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-celkem-last_two_digits.png}
+    \label{fig:USA24-celkem-last_two_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{First digit distributions from both candidates in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-dual-first_digits.png}
+    \label{fig:USA24-dual-first_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{First two digits distributions from both candidates in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-dual-first_two_digits.png}
+    \label{fig:USA24-dual-first_two_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{Last digit distributions from both candidates in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-dual-last_digits.png}
+    \label{fig:USA24-dual-last_digits}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \caption{Last two digits distributions from both candidates in the USA in 2024}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/USA24-dual-last_two_digits.png}
+    \label{fig:USA24-dual-last_two_digits}
+\end{figure}
+
+
 
 
 \section{Czechia Presidential elections in 2023}
 priority 
 
-\begin{koment}
-VERBATIM, PŘEPSAT:
+% \url{https://www.osce.org/files/f/documents/1/f/547004.pdf} OBSE posudek
 
-V České republice se opakovaně setkáváme s poukazy na nejrůznější vady volebního procesu. Běžně se můžeme dočíst o kupčení s hlasy, o podezřele vysokých počtech zneplatněných hlasů, hromadných účelových změnách trvalého bydliště před konáním komunálních voleb, účelovém svážení občanů k volebním místnostem , nedostatečné kontrole hlasovacích místností6 zejména v noci z pátka na
-sobotu, nekvalitní práci volebních komisí apod. \cite{Lebeda2021}
+% \begin{koment}
+% VERBATIM, PŘEPSAT:
 
-Reakce ze strany
-státu na tyto podněty však byla dlouhou dobu spíše vlažná. Opatření, která by tyto ne-
-dostatky eliminovala, byla v minulosti přijímána dosti pomalu. Transparentnosti bychom přitom měli věnovat velkou pozornost, protože spolu s důslednější kontrolou voleb totiž mohou vést k vyšší důvěře v demokratický režim, k vyšší volební účasti a tím pádem i k vyšší
-legitimitě volených orgánů. \cite{Lebeda2021}
+% V České republice se opakovaně setkáváme s poukazy na nejrůznější vady volebního procesu. Běžně se můžeme dočíst o kupčení s hlasy, o podezřele vysokých počtech zneplatněných hlasů, hromadných účelových změnách trvalého bydliště před konáním komunálních voleb, účelovém svážení občanů k volebním místnostem , nedostatečné kontrole hlasovacích místností6 zejména v noci z pátka na
+% sobotu, nekvalitní práci volebních komisí apod. \cite{Lebeda2021}
 
-Podezřelé: 
-Rozdíl mezi vydanými a odevzdanými obálkami, podíl neplatných hlasů (špatně odevzdané hlasy), 100 \% využitých preferenčních hlasů (celostátní průměr je asi 12 \%), 100 \% účast... Toto často vede na špatnou práci volební komise. \cite{Lebeda2021}
+% Reakce ze strany
+% státu na tyto podněty však byla dlouhou dobu spíše vlažná. Opatření, která by tyto ne-
+% dostatky eliminovala, byla v minulosti přijímána dosti pomalu. Transparentnosti bychom přitom měli věnovat velkou pozornost, protože spolu s důslednější kontrolou voleb totiž mohou vést k vyšší důvěře v demokratický režim, k vyšší volební účasti a tím pádem i k vyšší
+% legitimitě volených orgánů. \cite{Lebeda2021}
 
-Dalším problémem je to, že se volební komise málo obměňují, tudíž k těmto chybám může docházet opakovaně a systematicky. \cite{Lebeda2021}
+% Podezřelé: 
+% Rozdíl mezi vydanými a odevzdanými obálkami, podíl neplatných hlasů (špatně odevzdané hlasy), 100 \% využitých preferenčních hlasů (celostátní průměr je asi 12 \%), 100 \% účast... Toto často vede na špatnou práci volební komise. \cite{Lebeda2021}
 
-\end{koment}
+% Dalším problémem je to, že se volební komise málo obměňují, tudíž k těmto chybám může docházet opakovaně a systematicky. \cite{Lebeda2021}
+
+% \end{koment}
+
+\begin{figure}[h]
+    \centering
+    \caption{First digit distributions from both candidates in Czechia in 2023}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/CZ23-dual-first_digits.png}
+    \label{fig:CZ23-dual-first_digits}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \caption{First two digits distributions from both candidates in Czechia in 2023}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/CZ23-dual-first_two_digits.png}
+    \label{fig:CZ23-dual-first_two_digits}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \caption{Last digit distributions from both candidates in Czechia in 2023}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/CZ23-dual-last_digits.png}
+    \label{fig:CZ23-dual-last_digits}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \caption{Last two digits distributions from both candidates in Czechia in 2023}
+    \includegraphics[width=0.99\linewidth]{BT-DT-eng/fig/CZ23-dual-last_two_digits.png}
+    \label{fig:CZ23-dual-last_two_digits}
+\end{figure}
 
 
 
-\section{Estonia?}
-non priority 
+% \begin{figure}
+%     \centering
+%     \caption{First digit}
+%     \includegraphics[width=0.9\linewidth]{BT-DT-eng/fig/CZ23-AB-first_digits.png}
+%     \label{fig:CZ23-AB-first_digits}
+% \end{figure}
 
 
-co mi vyšlo 
+% \begin{figure}
+%     \centering
+%     \caption{First two digits}
+%     \includegraphics[width=0.9\linewidth]{BT-DT-eng/fig/CZ23-AB-first_two_digits.png}
+%     \label{fig:CZ23-AB-first_two_digits}
+% \end{figure}
+
+% \begin{figure}
+%     \centering
+%     \caption{Last digit}
+%     \includegraphics[width=0.9\linewidth]{BT-DT-eng/fig/CZ23-AB-last_digits.png}
+%     \label{fig:CZ23-AB-last_digits}
+% \end{figure}
+
+% \begin{figure}
+%     \centering
+%     \caption{Last two digits}
+%     \includegraphics[width=0.9\linewidth]{BT-DT-eng/fig/CZ23-AB-last_two_digits.png}
+%     \label{fig:CZ23-AB-last_two_digits}
+% \end{figure}
+
+% nastavit ty breaks lepe  (osa x popisky je to co myslim) 
+
+% lepsi barevne schema, vytvorit nejaky objekt jako legenda 
+
+% \section{OSCE Election Observing} 
+
+% the Republic of North Macedonia Presidental Elections 2024 
+
+% \url{https://www.osce.org/odihr/elections/north-macedonia/563601} - Makedonie 2024, druhe kolo, divne scitani? 
+
+% \url{https://www.osce.org/odihr/elections/azerbaijan/561302} Azerbaijan 2024, podivne volby, nepisou dobry posudek, mnoho pochybenich 
+
+% \url{https://www.osce.org/files/f/documents/6/2/561161_0.pdf} Uzbekistan 2023 
+

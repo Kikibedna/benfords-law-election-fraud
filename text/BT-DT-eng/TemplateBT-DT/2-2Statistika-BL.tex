@@ -1,10 +1,23 @@
 \chapter{Methods and Theoretical Background}
 
-This chapter focuses on explaining the methods, discussing the underlying theory, and outlining key assumptions. 
+This chapter explains the methods, discusses the underlying theory, and outlines key assumptions. 
 
-\section{Exponential distribution}
+\section{Selected relevant distributions}
 
-Describing the distance between independent events in time, the exponential distribution is \textcolor{blue}{...} with the key property in being lack of memory. PDF is one of the defining features of a random variable $X$, and for variables coming from an exponential distribution is defined as: 
+\subsection{Uniform discrete distribution}
+
+\begin{koment}
+    Popisuje chovani last digits, vlastne s pribyvajicimi digits v cisle BL k tomuto rozdeleni konverguje. Tvrdi to Kossovsky, Hronova i ten pan co analyzoval psychologii lidi. Ale je nejaky dukaz? 
+\end{koment}
+
+
+\subsection{Exponential distribution}
+
+\begin{koment}
+    why is it relevant? 
+\end{koment}
+
+Describing the distance between independent events in time, the exponential distribution is \textcolor{blue}{...} with the key property in being memoryless. PDF is one of the defining features of a random variable $X$, and for variables coming from an exponential distribution is defined as: 
 
 \begin{equation}
     f(x;\lambda) = \lambda e^{-\lambda x} \quad \text{for } x \ge 0 
@@ -118,30 +131,78 @@ Benforduv zakon je diskretni (relativni frekvence pro jednotlive cislice), expon
 %     vymyslet jak to pojmout a propojit? 
 % \end{koment}
 
+
 \section{Hypothesis testing}
 
-\subsection{First and second order errors (alpha beta)}
+Hypothesis testing is a fundamental framework used to test a theory about a population based on a sample by comparing two hypotheses in statistics at the given \textbf{level of significance}. The tested hypothesis is the \textit{null hypothesis} $H_0$. An alternative to this, usually a negation, always a disjunction, is the \textit{alternative hypothesis} $H_1$. 
 
-\subsection{P-value}
+\begin{equation}
+    H_0: \theta = \theta_0 \qquad \qquad H_1:  \theta \ne \theta_0
+\end{equation}
+
+In this case, we test whether the parameter $\theta$ is $\theta_0$ coming from a sample data. To test this assumption, a sample from the population is taken and analysed.  
+
+Given the nature of the test, we select the \textbf{test statistic}. Its value comes from the sample of data and can fall into two sets. One, where its values are not in conflict with the null hypothesis, the acceptance region $V_\alpha$, and the other, where the values conflict with the null hypothesis, the \textbf{rejection region} $W_\alpha$. The \textbf{critical value} is the boundary for rejecting the null hypothesis. In the end, it is decided based on the critical value and test statistic which hypothesis is rejected, but neither accepted. Or the \textbf{p-value} is computed and compared to the level of significance. \cite{Mala2024, Marek2024}
+
+\subsubsection*{Type I. and Type II. errors}
+
+Working with sample data, there are two specific kinds of errors, and the probability of one influences the probability of the other. 
+
+\textbf{Type I. error} $\alpha$ is the given level of significance, and it is the probability of rejecting the null hypothesis if the null hypothesis is correct. The $\alpha$ is usually set at 0.05. 
+
+\begin{equation}
+    \alpha = P(W_\alpha | H_0)
+\end{equation}
+
+\textbf{Type II. error} $\beta$ is the probability of not rejecting the null hypothesis if the null hypothesis is not correct. 
+
+\begin{equation}
+    \beta = P(V_\alpha | H_1)
+\end{equation}
+
+The probability $1-\beta$ is the \textbf{power of test} and denotes the probability of correct rejection of the null hypothesis. 
+
+\subsubsection*{P-value}
+
+The probability of obtaining a result which is as far or further from $H_{0}$ than the observed value. We reject the $H_{0}$ when  $p \le \alpha$ and we reject the $H_{1}$ when $p \ge \alpha$.
 
 \subsection{Compliance to BL testing}
 
 \subsubsection*{$\chi^2$ goodness of fit test}
 
-To check the compliance of the data to the BL, we can use the $\chi^2$ goodness of fit test. The null hypothesis is that we assume the empirical distribution follows the theoretical BL distribution. The test criterion is given as such 
+To check the compliance of the data to the BL, we can use the $\chi^2$ goodness of fit test. This test is generally used to test whether the sample comes from an assumed population. The null hypothesis assumes the empirical distribution follows the theoretical (BL) distribution. The alternative hypothesis is the opposite. 
+
+\begin{align*}
+    H_0&: \pi_d = p_d, \qquad d \in \{1,2,\dots 9\}\\
+    H_1&: \pi_d \ne p_d
+\end{align*}
+
+The test statistic is given as such 
 
 \begin{equation}
     \label{chi-sq-test}
-    G= n \sum\limits_{d=1}^{9} \frac{(p_d -\pi_d)^2}{\pi_d} 
+    G= n \sum\limits_{d=1}^{9} \frac{(p_d -\pi_d)^2}{\pi_d} \qquad \qquad  G \approx \chi^2(9-1)
 \end{equation}
 
 \begin{align*}
     \text{where } &\pi_d \text{ is the theoretical frequency under BL distribution}, \\
-    &p_d \text{ is the empirical frequency from the data, and} \\ 
-    &n \text{ is the sample size}
+    &p_d \text{ is the empirical frequency from the data} \\ 
+    &n \text{ is the sample size, and} \\
+    &d \text{ is the corresponding digit}
 \end{align*} 
 
-as recommended in \citeauthor{Hronova2023}, \citeyear{Hronova2023} and  \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}. %asi i Kossovsky
+as recommended in \citeauthor{Hronova2023}, \citeyear{Hronova2023} and  \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}. 
+
+There is one assumption, and that is that the sample size is large enough.  
+$n \cdot \pi_d > 5$ for all $d$. The rejection region under the null hypothesis is 
+
+\begin{equation}
+    W_\alpha = \left( \chi^2; G \ge \chi^2_{1-\alpha}(9-1) \right) = (\chi^2_{1-\alpha}(8), \infty)
+\end{equation}
+
+for the distribution of the first leading digit. 
+
+The test can be summed up as the larger the fraction (\ref{chi-sq-test}), the poorer the fit between the empirical and theoretical frequencies.
 
 % \begin{koment}
 %     Pozor na stanovení N při testování pomocí chisq testu.
@@ -169,9 +230,11 @@ Null hypothesis: Data obeys Benford's Law in the context of the particular digit
     &n \text{ is the sample size}
 \end{align*} 
 
-We reject the null hypothesis when the $Z_d$ value is larger than $Z$ with the hladina významnosti alpha. $Z$ refers to the Standardized Normal Distribution, a Normal distribution with mean 0 and standard deviation 1. 
+We reject the null hypothesis when the $Z_d$ value is larger than $Z$ with the level of significance, $\alpha$. $Z$ refers to the Standardized Normal Distribution, a Normal distribution with mean 0 and standard deviation 1. \cite{kossovsky2014benford}
 
-\subsubsection*{Kolmogorov-Smirnov test}
+\begin{koment}
+    Ještě se rozhoduju, jestli se mi to k něčemu nebude hodit, tak to tu zatím nechávám.  
+\end{koment}
 
 \section{Benford's Law Formulation}
 
@@ -190,6 +253,7 @@ where $d_i \in \{1,\dots,9\}$ for first digit law and $d_i \in \{10,\dots,99\}$ 
     \label{fig:FL}
     \pgfplotsset{width=8.5cm,compat=1.18}
         \begin{tikzpicture}
+        \definecolor{clr1}{RGB}{00,152,129} 
             \begin{axis}[
                 ybar,
                 bar width=.4cm,
@@ -225,6 +289,7 @@ as mentioned by \citeauthor{Hronova2023} in \citeyear{Hronova2023}, assuming the
     \label{fig:second-digit-law}
         \pgfplotsset{width=8.5cm,compat=1.18}
             \begin{tikzpicture}
+            \definecolor{clr1}{RGB}{00,152,129} 
                 \begin{axis}[
                     ybar,
                     bar width=.4cm,
@@ -237,7 +302,7 @@ as mentioned by \citeauthor{Hronova2023} in \citeyear{Hronova2023}, assuming the
                     xtick=data,
                     yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
                     ]
-                \addplot coordinates {(0,0.12) (1,0.114) (2,0.109) (3, 0.104) (4,0.10) (5,0.097) (6,0.093) (7,0.09) (8,0.088) (9,0.085)};
+                \addplot coordinates {(0,0.12) (1,0.114) (2,0.109) (3, 0.104) (4,0.10) (5,0.097) (6,0.093) (7,0.09) (8,0.088) (9,0.085)}; %[clr1,fill=clr1,opacity=0.55]
                 \end{axis}
             \end{tikzpicture}
     \source{: \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}; processing: author}
@@ -262,6 +327,7 @@ multinomial distribution}} as put in \citeauthor{Hronova2023} in \citeyear{Hrono
     \label{fig:third-digit-law}
     \pgfplotsset{width=8.5cm,compat=1.18}
         \begin{tikzpicture}
+        \definecolor{clr1}{RGB}{00,152,129} 
             \begin{axis}[
                 ybar,
                 bar width=.4cm,
@@ -275,16 +341,19 @@ multinomial distribution}} as put in \citeauthor{Hronova2023} in \citeyear{Hrono
                 yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
                 ]
             \addplot coordinates {(0,0.1018) (1,0.1014) (2,0.1010) (3, 0.1006) (4,0.1002) (5,0.0998) (6,0.0994) (7,0.0990) (8,0.0986) (9,0.0983)};
+            
             \end{axis}
         \end{tikzpicture}
     \source{: \citeauthor{kossovsky2014benford}, \citeyear{kossovsky2014benford}; processing: author}
 \end{figure}
 
+So for digits in the last position, the distribution is expected to be very close to, if not uniform. 
+
 \subsection{Selected properties of numbers obeying Benford's Law}
 
 \subsubsection{The Scale Invariance Principle of Benford's Law}
 
-Given a dataset that already behaves according to BL, changing units (multiplying the whole dataset by the same constant) will still behave according to BL. Any arithmetic operation applied to the whole dataset does not change the underlying BL distribution. \cite{kossovsky2014benford, Hronova2023} %section 23 The Scale Invariance Principle 
+Given a dataset that behaves according to BL, changing units (multiplying the whole dataset by the same constant) will still behave according to BL. Any arithmetic operation applied to the whole dataset does not change the underlying BL distribution. \cite{kossovsky2014benford, Hronova2023} %section 23 The Scale Invariance Principle 
 
 \subsubsection{Digital Development Pattern}
 
@@ -299,14 +368,29 @@ Comment on the conditions of what the dataset has to meet!
 
 The law does not impose many conditions on the data that will be analysed, yet some must be met for reliable results. This section will discuss the following. 
 
-\citeauthor{kossovsky2014benford} notes that for data to behave according to BL, its range should be wider, rather than narrow. He describes a measure \textbf{Order of Magnitude of Variability (OMV)} as:  
+\subsubsection*{Order of Magnitude of Variability (OMV)}
+
+\citeauthor{kossovsky2014benford} notes that for data to behave according to BL, its range should be wider, rather than narrow. He describes a measure Order of Magnitude of Variability (OMV) as 
 
 \begin{equation}
-    OMV = \log(\text{90th percentile}) - \log(\text{10th percentile}) > 3 
+    OMV = \log_{10}(\text{90th percentile}) - \log(\text{10th percentile}) > 3 
     \label{OMV}
 \end{equation}
 
-and recommends it should be larger than 3. In practice, this means that our data should spread all the way from 1 to 10000 or more for consistent results. 
+and recommends it should be larger than 3. In practice, this means that our data should spread all the way from 1 to 10000 or more for consistent results. If we were to use data with lower OMV than recommended, we would get results that look fraudulent, while being genuine - data like this has higher probabilities of type I error when testing for compliance to BL. 
+
+A more liberal measure is Order of Magnitude OOM, that is defined as
+
+\begin{equation}
+    OOM = \log_{10}(\text{max}) - \log(\text{minj}) > 3. 
+    \label{OOM}
+\end{equation}
+
+This measure, however, requires that outliers are removed. 
+
+\begin{koment}
+    Obě tyto míry slouží k lepšímu použití BL. Jsou-li splněny, můžeme používat BL v celé jeho šíři i generalizaci. Pokud ne, měli bychom BL používat více opatrně a ujstit se, že data jsou k použití BL vhodná.
+\end{koment}
  
 \subsubsection*{Correct usage} 
 
@@ -341,32 +425,32 @@ There are also numbers that someone must have made up at some point. In accounti
 Alternatively, the validity of BL can be influenced by changed external situations in regards to the data itself. For instance, how does sales data follow BL distribution when affected by the pandemic in 2020? This has been answered by \citeauthor{Hronova2023} in \citeyear{Hronova2023}. Changes like this should be taken into account, and analysis should be adapted accordingly.
 
 
-\subsection{Forensic digital analysis tests}
+% \subsection{Forensic digital analysis tests}
 
-When detecting similar errors, it is often not enough to only look at the first digits' distribution. It is advised to look at the last two digits to detect rounding. For a comprehensive analysis, \citeauthor{kossovsky2014benford} recommends following tests:
+% When detecting similar errors, it is often not enough to only look at the first digits' distribution. It is advised to look at the last two digits to detect rounding. For a comprehensive analysis, \citeauthor{kossovsky2014benford} recommends following tests:
 
-\begin{enumerate}
-    \item First-digits distribution
-    \item Second-digits distribution
-    \item Combination of the first-two-digits distributions
-    \item Combination of the first-three-digits distributions
-    \item Combination of the last-two-digits distributions 
-    \item Examination of first-order digital development
-    \item Examination of second-order digital development
-    \item Value repetition test
-    \item Observing the Digital Development and BL Pattern among it 
-    \item Summation test   
-\end{enumerate}
+% \begin{enumerate}
+%     \item First-digits distribution
+%     \item Second-digits distribution
+%     \item Combination of the first-two-digits distributions
+%     \item Combination of the first-three-digits distributions
+%     \item Combination of the last-two-digits distributions 
+%     \item Examination of first-order digital development
+%     \item Examination of second-order digital development
+%     \item Value repetition test
+%     \item Observing the Digital Development and BL Pattern among it 
+%     \item Summation test   
+% \end{enumerate}
 
-These tests, as they are generally very important to include, do not make any sense in our analysed data. Value repetition test is advised to be useful for data from the accounting or financial sector, digital development is not interesting since the election districts are set to be a particular size and summation test is not making any sense to be used in election analysis. 
+% These tests, as they are generally very important to include, do not make any sense in our analysed data. Value repetition test is advised to be useful for data from the accounting or financial sector, digital development is not interesting since the election districts are set to be a particular size and summation test is not making any sense to be used in election analysis. 
 
-% \subsubsection*{Combination of distributions}
+% % \subsubsection*{Combination of distributions}
 
-\begin{koment}
-    Popravdě, mám chuť toto skipnout, Summation test mi nedává v kontextu voleb až takový smysl, myslím, že ho vynechám. Value repetition test je doporučen pro accounting a financial data. Digital development je essential, na ten se musím podívat.  
+% \begin{koment}
+%     Popravdě, mám chuť toto skipnout, Summation test mi nedává v kontextu voleb až takový smysl, myslím, že ho vynechám. Value repetition test je doporučen pro accounting a financial data. Digital development je essential, na ten se musím podívat.  
 
-    Jenže u toho je problém v tom, že volební okrsky jsou fixed na 1000 obyvatel, tudíž ten development nebude moc velkej. Co okresní data? Mám pocit, že se to mé práce taky úplně netýká. 
-\end{koment}
+%     Jenže u toho je problém v tom, že volební okrsky jsou fixed na 1000 obyvatel, tudíž ten development nebude moc velkej. Co okresní data? Mám pocit, že se to mé práce taky úplně netýká. 
+% \end{koment}
 
 
 \subsubsection*{Examination of a digital development}
@@ -387,7 +471,6 @@ This pattern can only be seen when the data range is partitioned along integral 
 
 This is the proposed analysis workflow for this thesis: 
 
-
 Preprocessing: 
 
 \begin{enumerate}
@@ -399,9 +482,14 @@ Preprocessing:
 Analysis itself: 
 
 \begin{enumerate}
-    \item[4.] Is data fit for applying BL? (velikost okrsku, min max vzdalenost a tak)
-    \item[5.] First leading digits compliance to BL
-    \item[6.] Last digits test (their relative frequency is from the Uniform distribution)
-    \item[7.] Summation test 
-    \item[8.] Value Repetition test
+    \item[4.] Is the data fit for applying BL? $OMV > 3$
+    \item[5.] First leading digits compliance to BL + $\chi^2$ goodness of fit test (first one and first two)
+    \item[6.] Last digits test (their relative frequency is from the Uniform distribution) + $\chi^2$ goodness of fit test
 \end{enumerate}
+
+\begin{koment}
+    chci sem pridat mozna nejaky pseudokod / diagram at je to trochu nazorne    
+\end{koment}
+
+
+
