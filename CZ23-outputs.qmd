@@ -1,0 +1,167 @@
+---
+title: "ČR obce 2023"
+format: html
+editor: source
+---
+
+```{r setup}
+cfg <- config::get()
+source(cfg$library)
+
+# analysis on the city level + foreign vote counts 
+data_city <- load_csv(file.path(cfg$data, "CR-prezidentske-2023", "export (1).csv"))
+data_reg <- load_csv(file.path(cfg$data, "CR-prezidentske-2023", "export (2).csv"))
+
+foreign <- data_reg |> filter(Okres == "Zahraničí") # foreign vote counts
+names(foreign) <- names(data_city)
+
+data_city <- rbind(data_city, (foreign))
+```
+
+
+```{r eval = F}
+library(czso)
+pr2023pet1 <- czso_get_table("pr2023pet1")
+
+pr2023pet1 <- pr2023pet1 |> mutate(across(starts_with("HLASY"), as.numeric),
+                                   across(c("VOL_SEZNAM","VYD_OBALKY","ODEVZ_OBAL","PL_HL_CELK"), as.numeric)) |>
+  select(-TYP_FORM, -OPRAVA, -CHYBA, -starts_with("KC"), -POSL_KAND)
+
+first_round <- pr2023pet1 |> filter(KOLO == 1) |>
+  group_by(OBEC) |> summarise(across(starts_with("HLASY"), \(x) sum(x, na.rm = T)),
+                              VOL_SEZNAM = sum(VOL_SEZNAM))
+```
+
+
+
+
+In this file I select the relevant elements of the analysis of Czech presidential elections in 2023. 
+
+# First round 
+
+
+
+
+# Second round 
+
+## celkem 
+```{r}
+numbers <- data_city$celkem 
+
+# plot(1:length(numbers[numbers<85732]), numbers[numbers<85732]) #4 outliers removed
+# max(numbers[numbers<85732])
+
+OMV(numbers)
+OOM(numbers[numbers<85732])
+```
+
+
+```{r both}
+numbers <- c(data_city$Petr_Pavel, data_city$Andrej_Babis)
+
+OMV(numbers)
+OOM(numbers[numbers<10000])
+```
+
+
+```{r both}
+first <- digits(numbers, first = 1)
+plot_BL_RelFreq_bar(digits(numbers, first = 1))
+save_png("CZ23-both-first_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits(numbers, first = 2))
+save_png("CZ23-both-first_two_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, 2, na.rm = T), position = 2)
+save_png("CZ23-both-second_digits")
+```
+
+
+```{r both}
+plot_BL_RelFreq_bar(digits(numbers, last = 1), last = T)
+save_png("CZ23-both-last_digits")
+```
+
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 3, na.rm = T), position = 3)
+save_png("CZ23-both-third_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 4, na.rm = T), position = 4)
+# save_png("CZ23-both-fourth_digits")
+```
+
+```{r dualplot}
+PP <- data_city$Petr_Pavel 
+AB <- data_city$Andrej_Babis 
+
+OMV(PP)
+OOM(PP[PP<10000])
+
+OMV(AB)
+OOM(AB[AB<10000])
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(A = digits(PP, first = 1), A_title = "Petr Pavel", 
+                        B = digits(AB, first = 1), B_title = "Andrej Babiš", 
+                        last = F)
+save_png("CZ23-dual-first_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(PP, first = 2), "Petr Pavel", 
+                        digits(AB, first = 2), "Andrej Babiš", 
+                        last = F, max = 0.045)
+save_png("CZ23-dual-first_two_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 2, na.rm = T), "Petr Pavel", position = 2, 
+                        digits_on_position(AB, position = 2, na.rm = T), "Andrej Babiš", 
+                        last = F, max =0.13)
+save_png("CZ23-dual-second_digits")
+```
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 3, na.rm = T), "Petr Pavel", position = 3, 
+                        digits_on_position(AB, position = 3, na.rm = T), "Andrej Babiš", 
+                        last = F, max =0.12)
+save_png("CZ23-dual-third_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 4, na.rm = T), "Petr Pavel", position = 4, 
+                        digits_on_position(AB, position = 4, na.rm = T), "Andrej Babiš", 
+                        last = F, max = 0.15)
+# save_png("CZ23-dual-fourth_digits")
+```
+
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(PP, last = 1), "Petr Pavel", 
+                        digits(AB, last = 1), "Andrej Babiš", 
+                        last = T, max = 0.11)
+save_png("CZ23-dual-last_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(PP, last = 2), "Petr Pavel", 
+                        digits(AB, last = 2), "Andrej Babiš", 
+                        last = T, max = 0.015)
+# save_png("CZ23-dual-last_two_digits")
+```
+
+
