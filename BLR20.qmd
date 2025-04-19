@@ -12,6 +12,23 @@ source(cfg$library)
 
 data <- read.csv(file.path(cfg$data, "Belarus-2020", "Protocol_data.csv"))
 
+data<-data |> mutate(participation = Number.of.voters.who.took.part.in.the.vote/Total.number.of.voters, 
+               Lukashenko_rel= Lukashenko/Total.number.of.voters, 
+               Dmitriev_rel = Dmitriev/Total.number.of.voters, 
+               Tsikhanouskaya_rel= Tsikhanouskaya/Total.number.of.voters, 
+               Cherechen_rel = Cherechen/Total.number.of.voters, 
+               Konopackaya_rel = Konopackaya/Total.number.of.voters,
+               Number.of.ballots.declared.invalid = 
+                 ifelse(is.na(Number.of.ballots.declared.invalid), 0, Number.of.ballots.declared.invalid), 
+               Number.of.spoiled.ballots = 
+                 ifelse(is.na(Number.of.spoiled.ballots), 0, Number.of.spoiled.ballots), 
+               Number.of.unused.ballots = 
+                 ifelse(is.na(Number.of.unused.ballots), 0, Number.of.unused.ballots), 
+               valid_votes_rel = (Total.number.of.voters-
+                                    Number.of.ballots.declared.invalid-
+                                    Number.of.spoiled.ballots- 
+                                    Number.of.unused.ballots)/Total.number.of.voters)
+
 vec <- c(data$Dmitriev, data$Konopackaya, data$Lukashenko, data$Tsikhanouskaya, data$Cherechen)
 vec <- vec[!is.na(vec) & !vec == 0] #NA jsou vlastne 0 takze to je v pohode
 ```
@@ -23,69 +40,151 @@ OOM(vec)
 
 
 ```{r}
-first_digits <- digits(vec, first = 1)
-BL_leading_digit_table(first_digits)
-compliance_test_chisq(first_digits)
-plot_BL_RelFreq_bar(first_digits)
-save_png("USA24-celkem-first_digits")
+plot_scatter(A = data$Lukashenko_rel, 
+             #C = data$Dmitriev_rel, 
+             B = data$Tsikhanouskaya_rel, 
+             #D = data$Cherechen_rel,
+             Alab = "Lukashenko",
+             #Clab = "Dmitriev",
+             Blab = "Tsikhanouskaya",
+             #Dlab = "Cherechen",
+             X=data$valid_votes_rel, Xlab="valid votes") + 
+  plot_scatter(A = data$Lukashenko_rel, 
+             #C = data$Dmitriev_rel, 
+             B = data$Tsikhanouskaya_rel, 
+             #D = data$Cherechen_rel,
+             Alab = "Lukashenko",
+             #Clab = "Dmitriev",
+             Blab = "Tsikhanouskaya",
+             #Dlab = "Cherechen",
+             X=data$participation, Xlab="turnout") + 
+plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect") & 
+theme_BL(legend.position = "bottom")
 
+save_pdf("BLR20-scatter")
 
-plot_BL_RelFreq_bar(digits(data$Lukashenko, first = 1)) + 
-  plot_BL_RelFreq_bar(digits(data$Dmitriev, first = 1)) + 
-  plot_BL_RelFreq_bar(digits(data$Konopackaya, first = 1)) + 
-  plot_BL_RelFreq_bar(digits(data$Tsikhanouskaya, first = 1)) + 
-  plot_BL_RelFreq_bar(digits(data$Cherechen, first = 1)) + 
-  plot_layout(guides = "collect")
+plot_scatter_facet(A = data$Lukashenko_rel, 
+             #C = data$Dmitriev_rel, 
+             B = data$Tsikhanouskaya_rel, 
+             #D = data$Konopackaya_rel,
+             Alab = "Lukashenko",
+             #Clab = "Dmitriev",
+             Blab = "Tsikhanouskaya",
+             #Dlab = "Konopackaya",
+             X=data$valid_votes_rel, Xlab="valid votes") + 
+plot_scatter_facet(A = data$Lukashenko_rel, 
+             #C = data$Dmitriev_rel, 
+             B = data$Tsikhanouskaya_rel, 
+             #D = data$Cherechen_rel,
+             Alab = "Lukashenko",
+             #Clab = "Dmitriev",
+             Blab = "Tsikhanouskaya",
+             #Dlab = "Cherechen",
+             X=data$participation, Xlab="turnout") + 
+plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect") & 
+theme_BL(legend.position = "bottom")
+
+save_pdf("BLR20-scatter_decompose")
 ```
 
 
-```{r}
-# last_digits <- digits(data$total_votes, last = 1)
-# BL_last_digit_table(last_digits)
-# compliance_test_chisq(last_digits, last = T)
-# plot_BL_RelFreq_bar(last_digits, last = T)
-# save_png("USA24-celkem-last_digits")
-# 
-# first_two_digits <- digits(data$total_votes, first = 2)
-# BL_leading_digit_table(first_two_digits)
-# compliance_test_chisq(first_two_digits)
-# plot_BL_RelFreq_bar(first_two_digits)
-# save_png("USA24-celkem-first_two_digits")
-# 
-# last_two_digits <- digits(data$total_votes, last = 2)
-# BL_last_digit_table(last_two_digits)
-# compliance_test_chisq(last_two_digits, last = T)
-# plot_BL_RelFreq_bar(last_two_digits, last = T)
-# save_png("USA24-celkem-last_two_digits")
-# 
-# 
-# OMV(data$votes_dem)
-# OOM(data$votes_dem)
-# 
-# OMV(data$votes_gop)
-# OOM(data$votes_gop)
-# 
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 1), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, first = 1), B_title = "Democrats", 
-#                         last = F)
-# save_png("USA24-dual-first_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 2), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, first = 2), B_title = "Democrats", 
-#                         last = F, max = 0.052)
-# save_png("USA24-dual-first_two_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 1), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, last = 1), B_title = "Democrats", 
-#                         last = T, max = 0.12)
-# save_png("USA24-dual-last_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 2), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, last = 2), B_title = "Democrats", 
-#                         last = T, max = 0.0155)
-# save_png("USA24-dual-last_two_digits")
-
-
+```{r all}
+first <- digits(vec, first = 1)
+plot_BL_RelFreq_bar(digits(vec, first = 1)) 
+save_pdf("BLR20-all-first_digits")
 ```
+
+```{r all}
+plot_BL_RelFreq_bar(digits(vec, first = 2))
+save_pdf("BLR20-all-first_two_digits")
+```
+
+```{r all}
+plot_BL_RelFreq_bar(digits_on_position(vec, 2, na.rm = T), position = 2)
+save_pdf("BLR20-all-second_digits")
+```
+
+
+```{r all}
+plot_BL_RelFreq_bar(digits(vec, last = 1), last = T)
+save_pdf("BLR20-all-last_digits")
+```
+
+
+```{r all}
+plot_BL_RelFreq_bar(digits_on_position(vec, position = 3, na.rm = T), position = 3)
+save_pdf("BLR20-all-third_digits")
+```
+
+```{r all}
+plot_BL_RelFreq_bar(digits_on_position(vec, position = 4, na.rm = T), position = 4)
+# save_pdf("BLR20-all-fourth_digits")
+```
+
+## per candidate
+
+
+```{r dualplot}
+A <- data$Lukashenko
+B <- data$Tsikhanouskaya 
+
+A_title <- "Alexander Lukashenko"
+B_title <- "Sviatlana Tsikhanouskaya"
+
+OMV(A)
+OOM(A)
+
+OMV(B)
+OOM(B)
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(A = digits(A, first = 1), A_title = A_title, 
+                        B = digits(B, first = 1), B_title = B_title, 
+                        last = F, max = 0.38)
+save_pdf("BLR20-dual-first_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(A, first = 2), A_title, 
+                        digits(B, first = 2), B_title, 
+                        last = F, max = 0.1)
+save_pdf("BLR20-dual-first_two_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 2, na.rm = T), A_title, position = 2, 
+                        digits_on_position(B, position = 2, na.rm = T), B_title, 
+                        last = F, max =0.15)
+save_pdf("BLR20-dual-second_digits")
+```
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 3, na.rm = T), A_title, position = 3, 
+                        digits_on_position(B, position = 3, na.rm = T), B_title, 
+                        last = F, max =0.13)
+save_pdf("BLR20-dual-third_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 4, na.rm = T), A_title, position = 4, 
+                        digits_on_position(B, position = 4, na.rm = T), B_title, 
+                        last = F, max = 0.17)
+# save_pdf("BLR20-dual-fourth_digits")
+```
+
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(A, last = 1), A_title, 
+                        digits(B, last = 1), B_title, 
+                        last = T, max = 0.13)
+save_pdf("BLR20-dual-last_digits")
+```
+
+
 

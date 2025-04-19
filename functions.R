@@ -6,17 +6,34 @@ library(tidyr)
 library(patchwork)
 
 # load --------------
-load_csv <- function(file_path){ # CSU data load and preprocess
-data <- read_csv2(file_path, col_names = F)
-nazev <- str_split_1(data[1,1]$X1, " ")[1]
-data <- data[4:nrow(data),]
-names(data) <- c(nazev, "Petr_Pavel", "Andrej_Babis")
-data <- data |> mutate(Petr_Pavel = as.numeric(Petr_Pavel), 
-                       Andrej_Babis = as.numeric(Andrej_Babis),
-                       celkem = Petr_Pavel + Andrej_Babis)
-return(data)
-}
+# load_csv <- function(file_path){ # CSU data load and preprocess
+# data <- read_csv2(file_path, col_names = F)
+# nazev <- str_split_1(data[1,1]$X1, " ")[1]
+# data <- data[4:nrow(data),]
+# names(data) <- c(nazev, "Petr_Pavel", "Andrej_Babis")
+# data <- data |> mutate(Petr_Pavel = as.numeric(Petr_Pavel), 
+#                        Andrej_Babis = as.numeric(Andrej_Babis),
+#                        celkem = Petr_Pavel + Andrej_Babis)
+# return(data)
+# }
 
+# CSU data load and preprocess
+read_csv_czso <- function(path, type = 'counts'){
+  dta <- read.csv(path, sep = ';', dec = ',')
+  if(type == 'counts'){
+    data <- dta[3:nrow(dta),]
+    names(data) <- c("Obec","Petr_Pavel","Andrej_Babis")
+    data <- data |> mutate(Petr_Pavel = as.numeric(Petr_Pavel), 
+                           Andrej_Babis = as.numeric(Andrej_Babis))
+    
+  } else if(type == 'ucast'){
+    data <- dta[2:nrow(dta),]
+    names(data) <- c("Obec", "Ucast_rel", "Volici_seznam", 
+                     "Vydane_obalky", "Odevzdane_obalky", 
+                     "Platne_hlasy", "Platne_hlasy_rel")
+  }
+  return(data)
+}
 
 # process  -------------- 
 digits_on_position <- function(vec, position, na.rm = F){
@@ -177,14 +194,16 @@ OOM <- function(X){ # OMV > 3 condition to use first digit BL
   return(result)
 }
 
-compliance_test_chisq <- function(BL_table){
+compliance_test_chisq <- function(BL_table, hints = F){
   if(!prod(BL_table$Freq > 5)){
     #stop("Assumption of the test `n · πd > 5 for all d` is not met.")
     return(data.frame(p.value = "unreliable"))
   }
-  cat("H0: teoreticke = namerene cetnosti\n\n")
-  cat("p-hodnota > alpha: nezamitam H0\n")
-  cat("p-hodnota <= alpha: zamitam H0\n")
+  if(hints){
+    cat("H0: teoreticke = namerene cetnosti\n\n")
+    cat("p-hodnota > alpha: nezamitam H0\n")
+    cat("p-hodnota <= alpha: zamitam H0\n")
+  }
   chisq.test(x=BL_table$Freq, p=BL_table$BL, rescale.p = F)
 }
 
@@ -193,26 +212,63 @@ compliance_test_chisq <- function(BL_table){
 
 barvy <- list(
   leading_digits = c(
-    BL =  "#AFAFFF", #'#cccccc',
-    RelFreq = 'blue3'#'darkblue'
+    BL =  "#b1c7c3", #'#cccccc',
+    RelFreq = '#009881'#'darkblue'
   ),
   last_digits = c(
     BL = '#cccccc',
     RelFreq = '#7F1734'
+  ),
+  scatter = c(
+    'A' = '#009881',
+    'B' = '#A50063', 
+    'C' = "#F05A22", 
+    'D' = '#00AEEF'
+  ), 
+  VSE = c(green = "#009881",
+          aqua = "#6AD1E3",
+          gray = "#dddddd",
+          darkpink = "#A50063",
+          pink = "#EC298A",
+          blue = "#00659B",
+          lightblue = "#00AEEF",
+          orange = "#F05A22"
   )
 )
 
 # barvy <- list(
 #   leading_digits = c(
-#     BL = '#cccccc',
+#     BL = "#b1c7c3",#'#cccccc',
 #     RelFreq = '#009881'#"#009881"#'darkblue'
 #   ),
 #   last_digits = c(
 #     BL = '#cccccc',
 #     RelFreq = '#A50063'#"#A50063" #'#7F1734'
+#   ), 
+#     scatter = c(
+#       'Petr_Pavel_rel' = '#009881',
+#       'Andrej_Babis_rel' = '#A50063'
+#   ), 
+#   VSE = c(green = "#009881",
+#             aqua = "#6AD1E3",
+#             gray = "#dddddd", 
+#             darkpink = "#A50063",
+#             pink = "#EC298A",
+#             blue = "#00659B", 
+#             lightblue = "#00AEEF",
+#             orange = "#F05A22" 
 #   )
-# ) 
+# )
 
+save_pdf <- function(name, plot = last_plot(), width = 18, height = 9) {
+  base_dir <- getwd()
+  img_dir <- config::get("graphics") 
+  pth <- file.path(base_dir, img_dir, paste0(name, ".pdf"))
+  ggsave(plot = plot, 
+         filename = pth, 
+         device = "pdf",  # optional, since ggsave infers from .pdf
+         width = width, height = height, units = "cm", dpi = 300)
+}
 
 save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady by se hodilo dat credit do prace... 
   base_dir <- getwd()
@@ -224,10 +280,41 @@ save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady b
          width = width, height = height, units = "cm", dpi = 300)
 }
 
+# corr matrix upper panel as numeric, not scatter, usage: pairs(X, upper.panel = panel.cor)
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...) {
+  usr <- par("usr")
+  on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  Cor <- cor(x, y) # Remove abs function if desired
+  txt <- paste0(prefix, format(c(Cor, 0.123456789), digits = digits)[1])
+  if(missing(cex.cor)) {
+    cex.cor <- 0.7
+  }
+  text(0.5, 0.5, txt,
+       cex = 1 + cex.cor) # Resize the text by level of correlation
+}
+
+theme_BL <- function(legend.position, text.size = 12, subtitle.text.size = 10, ...){
+  theme_minimal() + theme(legend.position = legend.position, 
+        legend.box.just = "right",
+        #legend.box.background = element_rect(fill = "white", color="white", size=3), 
+        text=element_text(size=text.size, family="serif"), 
+        plot.subtitle = element_text(size = subtitle.text.size, hjust = 0.98), 
+        plot.caption = element_text(size = subtitle.text.size, hjust = 1), 
+        plot.caption.position = "plot", 
+        # panel.background = element_rect(fill = '#ffffff', color = "#ffffff"),
+        # panel.grid.major = element_line(color = '#dddddd'), #, linetype = 'dotted'
+        # panel.grid.minor = element_line(color = '#dddddd'), 
+        plot.background = element_rect(fill = "#ffffff", color = "#ffffff"),
+        panel.background = element_rect(fill = "#eeeeee", color = "#eeeeee"),
+        panel.grid.major = element_line(color = '#ffffff'), #, linetype = 'dotted'
+        panel.grid.minor = element_line(color = '#ffffff'))
+}
 
 
-plot_BL_RelFreq_bar <- function(vec, title = NULL, last = F, dual = F, position = F, legend.position = "bottom", 
-                                caption = NULL){
+plot_BL_RelFreq_bar <- function(vec, last = F, dual = F, position = F, legend.position = "bottom", 
+                                caption = NULL, 
+                                title = NULL){
   
   colors = barvy$leading_digits
   
@@ -249,6 +336,8 @@ plot_BL_RelFreq_bar <- function(vec, title = NULL, last = F, dual = F, position 
     subtitle.text <- paste("Goodness of fit test p-value:", round(test$p.value, 5))
   }
   
+  max <- max(c(BL_table$RelFreq,BL_table$BL)) + max(c(BL_table$RelFreq,BL_table$BL))/10
+  
   n.breaks <- case_when(
     log10(max(BL_table$digit)+1) <= 1 ~ 10, 
     dual & log10(max(BL_table$digit)+1) >= 2 & log10(max(BL_table$digit)+1) < 3 ~ 25/2,
@@ -260,21 +349,15 @@ plot_BL_RelFreq_bar <- function(vec, title = NULL, last = F, dual = F, position 
     pivot_longer(cols = c("BL", "RelFreq"), names_to = "law", values_to = 'relative frequency') |> 
     ggplot(aes(x=digit, y=`relative frequency`, fill = as.factor(law))) + 
     geom_bar(stat = 'identity', position = 'dodge') + 
-    theme_minimal() + 
     ggtitle(title) + labs(subtitle = subtitle.text,
                           caption = caption) + 
     scale_x_continuous(n.breaks = n.breaks) +
+    ylim(0, max) + 
     scale_fill_manual(values=colors, 
                       labels = c(RelFreq = 'Observed relative frequency', 
                                  BL = "Benford's Law"), 
                       name = NULL)  + 
-    theme(legend.position = legend.position, 
-          legend.box.just = "right",
-          #legend.box.background = element_rect(fill = "white", color="white", size=3), 
-          text=element_text(size=12, family="serif"), 
-          plot.subtitle = element_text(size = 10, hjust = 0.98), 
-          plot.caption = element_text(size = 10, hjust = 1), 
-          plot.caption.position = "plot") 
+    theme_BL(legend.position = legend.position)
 }
 
 dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F, position = F){
@@ -285,7 +368,104 @@ dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F
     ylim(0, max)
 }
 
+plot_scatter<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NULL, D=NULL, Dlab =NULL){
+  if(!is.null(C) & !is.null(D)){
+    data.frame(A,B,C,D,X) |> 
+      pivot_longer(cols = c(A, B,C,D), 
+                   values_to = "votes", names_to = "candidate")  |> 
+      ggplot(aes(x = X, y = votes, color = candidate)) + 
+      geom_point(alpha = 0.1) + 
+      scale_color_manual(values=colors, 
+                         labels = c(A = Alab,
+                                    B = Blab,
+                                    C = Clab,
+                                    D = Dlab),
+                         name = NULL) + 
+      labs(subtitle =
+             paste("Correlation: ",
+                   round(cor(c(A,B,C,D),
+                             c(X,X,X,X),
+                             use = "complete.obs"), 2)
+             )
+      ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
+  }else{
+    data.frame(A,B,X) |> 
+      pivot_longer(cols = c(A, B), 
+                   values_to = "votes", names_to = "candidate")  |> 
+      ggplot(aes(x = X, y = votes, color = candidate)) + 
+      geom_point(alpha = 0.1) + 
+      scale_color_manual(values=colors, 
+                         labels = c(A = Alab,
+                                    B = Blab),
+                         name = NULL) + 
+      labs(subtitle =
+             paste("Correlation: ",
+                   round(cor(c(A,B),
+                             c(X,X),
+                             use = "complete.obs"), 2)
+             )
+      ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
+  }
+}
 
+plot_scatter_facet<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NULL, D=NULL, Dlab =NULL){
+  if(!is.null(C) & !is.null(D)){
+    data.frame(A,B,C,D,X) |> 
+      pivot_longer(cols = c(A, B,C,D), 
+                   values_to = "votes", names_to = "candidate")  |> 
+      ggplot(aes(x = X, y = votes, color = candidate)) + 
+      geom_point(alpha = 0.1) + 
+      facet_grid(.~candidate, labeller = labeller(candidate = c(A = Alab, B = Blab, 
+                                                                C = Clab, D = Dlab)))+
+      scale_color_manual(values=colors, 
+                         labels = c(A = Alab,
+                                    B = Blab,
+                                    C = Clab,
+                                    D = Dlab),
+                         name = NULL) + 
+      labs(subtitle = 
+             paste(Alab, "correlation: ", 
+                   round(cor(X, 
+                             A, 
+                             use = "complete.obs"), 2), "\n",
+                   Blab, "correlation: ", 
+                   round(cor(X, 
+                             B, 
+                             use = "complete.obs"), 2), "\n",
+                   Clab, "correlation: ", 
+                   round(cor(X, 
+                             C, 
+                             use = "complete.obs"), 2), "\n",
+                   Dlab, "correlation: ", 
+                   round(cor(X, 
+                             D, 
+                             use = "complete.obs"), 2)
+             )
+      ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
+  }else{
+    data.frame(A,B,X) |> 
+      pivot_longer(cols = c(A, B), 
+                   values_to = "votes", names_to = "candidate")  |> 
+      ggplot(aes(x = X, y = votes, color = candidate)) + 
+      geom_point(alpha = 0.1) + 
+      facet_grid(candidate~., labeller = labeller(candidate = c(A = Alab, B = Blab)))+
+      scale_color_manual(values=colors, 
+                         labels = c(A = Alab,
+                                    B = Blab),
+                         name = NULL) + 
+      labs(subtitle = 
+             paste(Alab, "correlation: ", 
+                   round(cor(X, 
+                             A, 
+                             use = "complete.obs"), 2), "\n",
+                   Blab, "correlation: ", 
+                   round(cor(X, 
+                             B, 
+                             use = "complete.obs"), 2)
+             )
+      ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
+  }
+}
 
 
 sample_barvy<-c(

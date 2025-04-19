@@ -1,0 +1,172 @@
+---
+title: "USA24-outputs"
+format: html
+editor: source
+---
+
+```{r setup}
+cfg <- config::get()
+source(cfg$library)
+
+# analysis on the city level + foreign vote counts 
+data <- read.csv(file.path(cfg$data, "USA-2024",
+                           "2024_US_County_Level_Presidential_Results.csv"), 
+                 header = T, sep = ",")
+
+A <- data$votes_gop
+B <- data$votes_dem 
+A_title <- "Donald Trump"
+B_title <- "Kamala Harris"
+```
+
+## EDA 
+
+```{r}
+data |> nrow()
+
+boxplot(c(A, B))
+sd(c(A,B))
+```
+
+
+## all votes 
+
+```{r}
+numbers <- data$total_votes
+
+plot(1:length(numbers), numbers) # 7 outliers removed
+abline(h = quantile(numbers, 0.75), col = 'blue')
+
+plot(1:length(numbers[numbers<2e+6]), numbers[numbers<2e+6]) # outliers removed
+abline(h = quantile(numbers, 0.75), col = 'blue')
+# max(numbers)
+
+OMV(numbers)
+OOM(numbers[numbers<quantile(numbers, 0.75)])
+```
+
+
+```{r both}
+numbers <- c(A, B)
+
+plot(1:length(numbers), numbers) # 7 outliers removed
+abline(h = quantile(numbers, 0.75) , col = 'blue')
+
+# plot(1:length(numbers[numbers<10^5]), numbers[numbers<10^5]) 
+# abline(h = quantile(numbers, 0.75), col = 'blue')
+
+OMV(numbers)
+OOM(numbers[numbers<quantile(numbers, 0.75)])
+```
+
+
+
+```{r both}
+first <- digits(numbers, first = 1)
+plot_BL_RelFreq_bar(digits(numbers, first = 1))
+save_pdf("USA24-both-first_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits(numbers, first = 2))
+save_pdf("USA24-both-first_two_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, 2, na.rm = T), position = 2)
+save_pdf("USA24-both-second_digits")
+```
+
+
+```{r both}
+plot_BL_RelFreq_bar(digits(numbers, last = 1), last = T)
+save_pdf("USA24-both-last_digits")
+```
+
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 3, na.rm = T), position = 3)
+save_pdf("USA24-both-third_digits")
+```
+
+```{r both}
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 4, na.rm = T), position = 4)
+# save_pdf("USA24-both-fourth_digits")
+```
+
+
+```{r both, eval = F}
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 5, na.rm = T), position = 5)
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 6, na.rm = T), position = 6)
+
+```
+
+## per candidate
+
+```{r dualplot}
+OMV(A)
+OOM(A[A<10000])
+
+OMV(B)
+OOM(B[B<10000])
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(A = digits(A, first = 1), A_title = A_title, 
+                        B = digits(B, first = 1), B_title = B_title, 
+                        last = F)
+save_pdf("USA24-dual-first_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(A, first = 2), A_title, 
+                        digits(B, first = 2), B_title, 
+                        last = F, max = 0.05)
+save_pdf("USA24-dual-first_two_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 2, na.rm = T), A_title, position = 2, 
+                        digits_on_position(B, position = 2, na.rm = T), B_title, 
+                        last = F, max =0.15)
+save_pdf("USA24-dual-second_digits")
+```
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 3, na.rm = T), A_title, position = 3, 
+                        digits_on_position(B, position = 3, na.rm = T), B_title, 
+                        last = F, max =0.12)
+save_pdf("USA24-dual-third_digits")
+```
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits_on_position(A, position = 4, na.rm = T), A_title, position = 4, 
+                        digits_on_position(B, position = 4, na.rm = T), B_title, 
+                        last = F, max = 0.108)
+# save_pdf("USA24-dual-fourth_digits")
+```
+
+
+
+```{r dualplot}
+dualplot_BL_RelFreq_bar(digits(A, last = 1), A_title, 
+                        digits(B, last = 1), B_title, 
+                        last = T, max = 0.118)
+save_pdf("USA24-dual-last_digits")
+```
+
+
+```{r dualplot, eval = F}
+dualplot_BL_RelFreq_bar(digits(A, last = 2), A_title,
+                        digits(B, last = 2), B_title,
+                        last = T, max = 0.015)
+save_pdf("USA24-dual-last_two_digits")
+
+# Špatné použití: tady se vybírají poslední 2 číslice, jenže nehledě na velikost čísla. Pokud je v našem datasetu dost malých čísel, bude to tím ovlivněno, tudíž nejde takhle dělat graf. 
+```
+
+
