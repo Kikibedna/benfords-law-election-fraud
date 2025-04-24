@@ -94,7 +94,7 @@ table_dig <- data.frame(table_dig) |> mutate(digit = 1:9)
 table_dig |> 
   pivot_longer(cols = c("X1", "X2","X3", "X4","X5"), names_to = 'order', values_to = 'relative frequency') |> 
   ggplot(aes(x = digit, y = `relative frequency`)) + 
-  geom_bar(stat = 'identity', position = 'dodge', fill = barvy$VSE["green"]) + 
+  geom_bar(stat = 'identity', position = 'dodge', fill = barvy$VSE['darkpink']) + 
   scale_x_continuous(n.breaks = 10) +
   #ggtitle("Digital development pattern") + 
   facet_grid(.~order, labeller = 
@@ -108,6 +108,11 @@ save_pdf("CZ23-digital_development_pattern")
 
 ```
 
+```{r}
+length(data_cities$Petr_Pavel)
+sum(data_cities$Andrej_Babis)
+```
+
 
 
 ```{r}
@@ -116,7 +121,7 @@ pairs(data_cities |> select(Ucast_rel, Petr_Pavel_rel, Andrej_Babis_rel, Platne_
 ```
 
 
-```{r}
+```{r eval = F}
 plot_scatter(A = data_cities$Petr_Pavel_rel, 
              B = data_cities$Andrej_Babis_rel, 
              Alab = "Petr Pavel",
