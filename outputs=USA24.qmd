@@ -238,13 +238,10 @@ table_dig |>
                                   X3 = paste('100<=X<1000\n',  round(table[13,3],2), "%"),
                                   X4 = paste("10^3<=X<10^4\n",  round(table[13,4],2), "%"),
                                   X5 = paste('10^4<=X<10^5\n', round(table[13,5],2), "%"), 
-                                  X6 = paste('10^5<=X<10^6\n', round(table[13,6],2), "%")))) + 
+                                  X6 = paste('10^5<=X<10^6\n', round(table[13,6],2), "%"), 
+                                  X7 = paste('10^6<=X<10^7\n', round(table[13,6],2), "%")
+                                  ))) + 
   theme_BL(legend.position = 'none') 
-
-
-
-
-
 
 save_pdf("USA24-digital_development_pattern")
 
