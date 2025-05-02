@@ -3,6 +3,9 @@
 \usepackage[top=25mm,bottom=25mm,right=25mm,left=30mm,head=12.5mm,foot=12.5mm]{geometry}
 \let\openright=\clearpage
 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
 \usepackage{ifthen}
 \usepackage{caption} % sources in captions
 \newcommand{\source}[1]{\caption*{ \raggedleft \textit{Source{#1}}} }
@@ -77,7 +80,7 @@
 
 %%% Konzultant práce: Jméno a příjmení s~tituly
 %%% Consultant: First name and surname with titles
-\def\Konzultant{full consultant’s name (incl. degrees)}
+\def\Konzultant{} %full consultant’s name (incl. degrees)
 
 %%% Studijní program
 %%% Study program
@@ -103,6 +106,7 @@ Abstract.
 %%% Titulní strana a různé povinné informativní strany
 %%% Title page and various mandatory information pages
 \begin{document}
+
 \include{beginning}
 
 %%% Strana s automaticky generovaným obsahem práce
@@ -175,7 +179,7 @@ Note: The list of programme code excerpts should be used if the number of progra
 \appendix
 \include{app01}
 \include{app02}
-% \include{...}
-% \include{...}
+\include{app03}
+\include{app04}
 
 \end{document}
