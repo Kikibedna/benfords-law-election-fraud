@@ -5,11 +5,12 @@ editor: source
 ---
 
 ```{r setup}
-
 options(scipen = 999)
 
 cfg <- config::get()
 source(cfg$library)
+
+# dta_okrsky <- read_csv(file.path(cfg$data, "CR-prezidentske-2023", "pet1.csv"))
 
 dta_ucast <- read_csv_czso(type = 'ucast', 
                            path = file.path(cfg$data, "CR-prezidentske-2023", "ucast_obce.csv"))
@@ -20,7 +21,6 @@ dta_counts <- read_csv_czso(type = 'counts',
 dta_counts_reg <- read_csv_czso(type = 'counts', 
                                path = file.path(cfg$data, "CR-prezidentske-2023", "counts_okres.csv"))
 
-# data_cities <- dta_counts|> left_join(dta_ucast)
 data_regions <- dta_counts_reg |> left_join(dta_ucast_reg) 
 
 data_cities <- dta_counts |> 
@@ -32,63 +32,16 @@ data_cities <- dta_counts |>
          Platne_hlasy_rel = Platne_hlasy_rel/100)
 
 both <- c(data_cities$Petr_Pavel, data_cities$Andrej_Babis)
-
+PP <- data_cities$Petr_Pavel 
+AB <- data_cities$Andrej_Babis 
 ```
 
 
-
-## EDA 
-
-
-
+# Digital development pattern 
 
 ```{r digital development}
-intervals <- list(
-  c(1, 10),
-  c(10, 100),
-  c(100, 1000),
-  c(1000, 10000),
-  c(10000, 100000)
-)
-
-# Funkce pro výpočet procentuálního zastoupení číslic
-calculate_digit_percentages <- function(data, intervals, digits_on_position) {
-  results <- lapply(intervals, function(interval) {
-    interval_data <- data[data >= interval[1] & data < interval[2]]
-    digit_counts <- table(digits_on_position(interval_data, 1))
-    digit_percentages <- (digit_counts / length(interval_data))
-    overall_data <- length(interval_data)
-    list(digit_percentages = digit_percentages, overall_data = overall_data)
-  })
-  
-  results
-}
-
-# Výpočet procentuálního zastoupení číslic
-results <- calculate_digit_percentages(both, intervals, digits_on_position)
-
-# Vytvoření tabulky
-table <- tibble(
-  "Left Border Point" = sapply(intervals, function(x) x[1]),
-  "Right Border Point" = sapply(intervals, function(x) x[2]),
-  "Digit 1" = sapply(results, function(x) x$digit_percentages["1"]),
-  "Digit 2" = sapply(results, function(x) x$digit_percentages["2"]),
-  "Digit 3" = sapply(results, function(x) x$digit_percentages["3"]),
-  "Digit 4" = sapply(results, function(x) x$digit_percentages["4"]),
-  "Digit 5" = sapply(results, function(x) x$digit_percentages["5"]),
-  "Digit 6" = sapply(results, function(x) x$digit_percentages["6"]),
-  "Digit 7" = sapply(results, function(x) x$digit_percentages["7"]),
-  "Digit 8" = sapply(results, function(x) x$digit_percentages["8"]),
-  "Digit 9" = sapply(results, function(x) x$digit_percentages["9"]),
-  "# of Data points" = sapply(results, function(x) x$overall_data),
-  "% Overall Data" = (sapply(results, function(x) x$overall_data) / sum(sapply(results, function(x) x$overall_data))) * 100
-)
-
-table<- t(table)
-
-colnames(table) <- c("1", "2", "3", "4","5")
-table_dig<-table[-c(1,2,12,13),]
-
+table_ddp <- ddp_table(both, intervals = intervals[1:5]) 
+table_dig <- table_ddp[-c(1,2,12,13),]
 table_dig <- data.frame(table_dig) |> mutate(digit = 1:9) 
 
 table_dig |> 
@@ -98,14 +51,15 @@ table_dig |>
   scale_x_continuous(n.breaks = 10) +
   #ggtitle("Digital development pattern") + 
   facet_grid(.~order, labeller = 
-               labeller(order = c(X1 = paste('1<=X<10\n', round(table[13,1],2), "%"), 
-                                  X2 = paste("10<=X<100\n",  round(table[13,2],2), "%"),
-                                  X3 = paste('100<=X<1000\n',  round(table[13,3],2), "%"),
-                                  X4 = paste("1000<=X<10000\n",  round(table[13,4],2), "%"),
-                                  X5 = paste('10000<=X<100000\n', round(table[13,5],2), "%")))) + theme_BL(legend.position = 'none') 
+               labeller(order = c(X1 = paste('1<=X<10\n', round(table_ddp[13,1],2), "%"), 
+                                  X2 = paste("10<=X<100\n",  round(table_ddp[13,2],2), "%"),
+                                  X3 = paste('100<=X<1000\n',  round(table_ddp[13,3],2), "%"),
+                                  X4 = paste("1000<=X<10000\n",  round(table_ddp[13,4],2), "%"),
+                                  X5 = paste('10000<=X<100000\n', round(table_ddp[13,5],2), "%")))
+             ) + theme_BL(legend.position = 'none') 
 
 save_pdf("CZ23-digital_development_pattern")
-
+write.csv(table_ddp, 'ddptable.csv')
 ```
 
 ```{r}
@@ -114,11 +68,19 @@ sum(data_cities$Andrej_Babis)
 ```
 
 
-
 ```{r}
-pairs(data_cities |> select(Ucast_rel, Petr_Pavel_rel, Andrej_Babis_rel, Platne_hlasy_rel),
-      upper.panel = panel.cor)
+data_cities |> 
+ggplot(aes(x = Platne_hlasy_rel, y = Ucast_rel)) + 
+  geom_point(alpha = 0.1, color = barvy$scatter[2]) +
+  #scale_color_manual(values=colors) + 
+  labs(subtitle =
+             paste("Correlation: ",
+                   round(cor(c(data_cities$Platne_hlasy_rel),
+                             c(data_cities$Ucast_rel),
+                             use = "complete.obs"), 2))
+      ) + xlab("Platne_hlasy_rel") + theme_BL(legend.position = "bottom")
 ```
+
 
 
 ```{r eval = F}
@@ -160,85 +122,51 @@ No patterns, no correlation. All is good.
 
 ## all votes 
 
-```{r}
-numbers <- data_cities$Platne_hlasy 
-
-plot(1:length(numbers), numbers) # 7 outliers removed
-abline(h = quantile(numbers, 0.95) , col = 'blue')
-
-# plot(1:length(numbers[numbers<10^5]), numbers[numbers<10^5]) 
-# abline(h = quantile(numbers, 0.75), col = 'blue')
-
-OMV(numbers)
-OOM(numbers[numbers<quantile(numbers, 0.95)])
-```
-
-
-```{r both}
-numbers <- both
-
-plot(1:length(numbers), numbers) # 7 outliers removed
-abline(h = quantile(numbers, 0.95) , col = 'blue')
-
-plot(1:length(numbers[numbers < 10000]), numbers[numbers < 10000]) # 7 outliers removed
-abline(h = quantile(numbers, 0.95) , col = 'blue')
-
-OMV(numbers)
-OOM(numbers[numbers<quantile(numbers, 0.95)])
-```
-
-
 ```{r both}
 first <- digits(numbers, first = 1)
+
+BL_general_digit_table(digits_on_position(numbers, 3), 3) |> mutate(RelFreq = round(RelFreq, 4), 
+                                 BL = round(BL, 4), 
+                                 diff = round(diff, 4)) |>  write.csv(file = "table.csv")
 plot_BL_RelFreq_bar(digits(numbers, first = 1)) 
 save_pdf("CZ23-both-first_digits")
 ```
 
 ```{r both}
-plot_BL_RelFreq_bar(digits(numbers, first = 2))
+plot_BL_RelFreq_bar(digits(numbers, first = 2),legend.position = 'none')
 save_pdf("CZ23-both-first_two_digits")
 ```
 
 ```{r both}
-plot_BL_RelFreq_bar(digits_on_position(numbers, 2, na.rm = T), position = 2)
+plot_BL_RelFreq_bar(digits_on_position(numbers, 2, na.rm = T), position = 2, legend.position = 'none')
 save_pdf("CZ23-both-second_digits")
 ```
 
 
 ```{r both}
-plot_BL_RelFreq_bar(digits(numbers, last = 1), last = T)
+plot_BL_RelFreq_bar(digits(numbers, last = 1), last = T, legend.position = 'none')
 save_pdf("CZ23-both-last_digits")
 ```
 
 
 ```{r both}
-plot_BL_RelFreq_bar(digits_on_position(numbers, position = 3, na.rm = T), position = 3)
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 3, na.rm = T), position = 3, legend.position = 'none')
 save_pdf("CZ23-both-third_digits")
 ```
 
 ```{r both}
-plot_BL_RelFreq_bar(digits_on_position(numbers, position = 4, na.rm = T), position = 4)
+plot_BL_RelFreq_bar(digits_on_position(numbers, position = 4, na.rm = T), position = 4, legend.position = 'none')
 # save_pdf("CZ23-both-fourth_digits")
 ```
 
 ## per candidate
 
-```{r dualplot}
-PP <- data_cities$Petr_Pavel 
-AB <- data_cities$Andrej_Babis 
-
-OMV(PP)
-OOM(PP[PP<10000])
-
-OMV(AB)
-OOM(AB[AB<10000])
-```
 
 
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(A = digits(PP, first = 1), A_title = "Petr Pavel", 
                         B = digits(AB, first = 1), B_title = "Andrej Babiš", 
-                        last = F)
+                        last = F, legend.position = 'bottom')
 save_pdf("CZ23-dual-first_digits")
 ```
 
@@ -246,7 +174,7 @@ save_pdf("CZ23-dual-first_digits")
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(digits(PP, first = 2), "Petr Pavel", 
                         digits(AB, first = 2), "Andrej Babiš", 
-                        last = F, max = 0.045)
+                        last = F, max = 0.045, legend.position = 'bottom')
 save_pdf("CZ23-dual-first_two_digits")
 ```
 
@@ -254,13 +182,13 @@ save_pdf("CZ23-dual-first_two_digits")
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 2, na.rm = T), "Petr Pavel", position = 2, 
                         digits_on_position(AB, position = 2, na.rm = T), "Andrej Babiš", 
-                        last = F, max =0.13)
+                        last = F, max =0.13, legend.position = 'bottom')
 save_pdf("CZ23-dual-second_digits")
 ```
 
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 3, na.rm = T), "Petr Pavel", position = 3, 
-                        digits_on_position(AB, position = 3, na.rm = T), "Andrej Babiš", 
+                        digits_on_position(AB, position = 3, na.rm = T), "Andrej Babiš", legend.position = 'bottom',
                         last = F, max =0.12)
 save_pdf("CZ23-dual-third_digits")
 ```
@@ -268,7 +196,7 @@ save_pdf("CZ23-dual-third_digits")
 
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 4, na.rm = T), "Petr Pavel", position = 4, 
-                        digits_on_position(AB, position = 4, na.rm = T), "Andrej Babiš", 
+                        digits_on_position(AB, position = 4, na.rm = T), "Andrej Babiš", legend.position = 'bottom',
                         last = F, max = 0.15)
 # save_pdf("CZ23-dual-fourth_digits")
 ```
@@ -277,20 +205,13 @@ dualplot_BL_RelFreq_bar(digits_on_position(PP, position = 4, na.rm = T), "Petr P
 
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(digits(PP, last = 1), "Petr Pavel", 
-                        digits(AB, last = 1), "Andrej Babiš", 
+                        digits(AB, last = 1), "Andrej Babiš", legend.position = 'bottom',
                         last = T, max = 0.11)
 save_pdf("CZ23-dual-last_digits")
 ```
 
 
-```{r dualplot, eval = F}
-dualplot_BL_RelFreq_bar(digits(PP, last = 2), "Petr Pavel",
-                        digits(AB, last = 2), "Andrej Babiš",
-                        last = T, max = 0.015)
-save_pdf("CZ23-dual-last_two_digits")
 
-# Špatné použití: tady se vybírají poslední 2 číslice, jenže nehledě na velikost čísla. Pokud je v našem datasetu dost malých čísel, bude to tím ovlivněno, tudíž nejde takhle dělat graf. 
-```
 
 
 

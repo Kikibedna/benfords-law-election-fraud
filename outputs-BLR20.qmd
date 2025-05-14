@@ -9,54 +9,126 @@ editor: source
 cfg <- config::get()
 source(cfg$library)
 
-
 data <- read.csv(file.path(cfg$data, "Belarus-2020", "Protocol_data.csv"))
 
-data<-data |> mutate(participation = Number.of.voters.who.took.part.in.the.vote/Total.number.of.voters, 
-               Lukashenko_rel= Lukashenko/Total.number.of.voters, 
-               Dmitriev_rel = Dmitriev/Total.number.of.voters, 
-               Tsikhanouskaya_rel= Tsikhanouskaya/Total.number.of.voters, 
-               Cherechen_rel = Cherechen/Total.number.of.voters, 
-               Konopackaya_rel = Konopackaya/Total.number.of.voters,
-               Number.of.ballots.declared.invalid = 
-                 ifelse(is.na(Number.of.ballots.declared.invalid), 0, Number.of.ballots.declared.invalid), 
-               Number.of.spoiled.ballots = 
-                 ifelse(is.na(Number.of.spoiled.ballots), 0, Number.of.spoiled.ballots), 
-               Number.of.unused.ballots = 
-                 ifelse(is.na(Number.of.unused.ballots), 0, Number.of.unused.ballots), 
-               valid_votes_rel = (Total.number.of.voters-
-                                    Number.of.ballots.declared.invalid-
-                                    Number.of.spoiled.ballots- 
-                                    Number.of.unused.ballots)/Total.number.of.voters)
+# preprocessing 
+data<-data |> mutate(
+  participation = Number.of.voters.who.took.part.in.the.vote/Total.number.of.voters, 
+#relative vote counts per polling station 
+  Lukashenko_rel= Lukashenko/Total.number.of.voters, 
+  Dmitriev_rel = Dmitriev/Total.number.of.voters, 
+  Tsikhanouskaya_rel= Tsikhanouskaya/Total.number.of.voters, 
+  Cherechen_rel = Cherechen/Total.number.of.voters, 
+  Konopackaya_rel = Konopackaya/Total.number.of.voters,
+  Against.all_rel = Against.all/Total.number.of.voters, 
+# NA -> 0 
+  Number.of.ballots.declared.invalid = 
+   ifelse(is.na(Number.of.ballots.declared.invalid), 0, Number.of.ballots.declared.invalid), 
+  Number.of.spoiled.ballots = 
+   ifelse(is.na(Number.of.spoiled.ballots), 0, Number.of.spoiled.ballots), 
+  Number.of.unused.ballots = 
+   ifelse(is.na(Number.of.unused.ballots), 0, Number.of.unused.ballots), 
+# valid votes 
+  valid_votes_rel = (Total.number.of.voters-
+                      Number.of.ballots.declared.invalid-
+                      Number.of.spoiled.ballots- 
+                      Number.of.unused.ballots)/Total.number.of.voters)
 
 vec <- c(data$Dmitriev, data$Konopackaya, data$Lukashenko, data$Tsikhanouskaya, data$Cherechen)
-vec <- vec[!is.na(vec) & !vec == 0] #NA jsou vlastne 0 takze to je v pohode
+vec <- vec[!is.na(vec) & !vec == 0] #rm NA and 0 
 
 A <- data$Lukashenko
 B <- data$Tsikhanouskaya 
+both <- c(A,B)
 
 A_title <- "Alexander Lukashenko"
 B_title <- "Sviatlana Tsikhanouskaya"
 
+
 ```
+
+# digital development pattern 
 
 ```{r}
-OMV(vec)
-OOM(vec)
+table_ddp <- ddp_table(both, intervals = intervals[1:4]) 
+table_dig <- table_ddp[-c(1,2,12,13),]
+table_dig <- data.frame(table_dig) |> mutate(digit = 1:9) 
+table_dig |> 
+  pivot_longer(cols = c("X1", "X2","X3", "X4"), names_to = 'order', values_to = 'relative frequency') |> 
+  ggplot(aes(x = digit, y = `relative frequency`)) + 
+  geom_bar(stat = 'identity', position = 'dodge', fill = barvy$VSE['darkpink']) + 
+  scale_x_continuous(n.breaks = 10) +
+  #ggtitle("Digital development pattern") + 
+  facet_grid(.~order, labeller = 
+               labeller(order = c(X1 = paste('1<=X<10\n', round(table_ddp[13,1],2), "%"), 
+                                  X2 = paste("10<=X<100\n",  round(table_ddp[13,2],2), "%"),
+                                  X3 = paste('100<=X<1000\n',  round(table_ddp[13,3],2), "%"),
+                                  X4 = paste("1000<=X<10000\n",  round(table_ddp[13,4],2), "%")#,
+                                  ))) + theme_BL(legend.position = 'none')
+
+save_pdf("BLR20-digital_development_pattern")
 ```
 
+This digital table proved to be unuseful for the analysis, the data needs to be aggregated for the pattern to be observed better. 
+
+```{r}
+# aggregating on the city level 
+data_cities <- data |> group_by(City) |> summarise(Lukashenko = sum(Lukashenko, na.rm = T), 
+                                                   Tsikhanouskaya = sum(Tsikhanouskaya, na.rm = T), 
+                                                   Total.number.of.voters = sum(Total.number.of.voters, na.rm = T))
+
+table_ddp <- ddp_table(data = c(data_cities$Lukashenko,data_cities$Tsikhanouskaya), intervals = intervals[1:6]) 
+table_dig <- table_ddp[-c(1,2,12,13),]
+table_dig <- data.frame(table_dig) |> mutate(digit = 1:9) 
+table_dig |> 
+  pivot_longer(cols = c("X1", "X2","X3", "X4","X5", "X6"), names_to = 'order', values_to = 'relative frequency') |> 
+  ggplot(aes(x = digit, y = `relative frequency`)) + 
+  geom_bar(stat = 'identity', position = 'dodge', fill = barvy$VSE['darkpink']) + 
+  scale_x_continuous(n.breaks = 10) +
+  #ggtitle("Digital development pattern") + 
+  facet_grid(.~order, labeller = 
+               labeller(order = c(X1 = paste('1<=X<10\n\n', round(table_ddp[13,1],2), "%"), 
+                                  X2 = paste("10<=X<100\n\n",  round(table_ddp[13,2],2), "%"),
+                                  X3 = paste('100<=X<1000\n\n',  round(table_ddp[13,3],2), "%"),
+                                  X4 = paste("10^3<=X<10^4\n\n",  round(table_ddp[13,4],2), "%"),
+                                  X5 = paste('10^4<=X<10^5\n\n', round(table_ddp[13,5],2), "%"), 
+                                  X6 = paste('10^5<=X<10^6\n\n', round(table_ddp[13,6],2), "%")
+                                  ))) + 
+  theme_BL(legend.position = 'none') 
+
+save_pdf("BLR20-digital_development_pattern_city_level")
+```
 
 ```{r}
 plot_scatter(A = data$Lukashenko_rel, 
-             #C = data$Dmitriev_rel, 
+             C = data$Dmitriev_rel, 
              B = data$Tsikhanouskaya_rel, 
-             #D = data$Cherechen_rel,
+             D = data$Cherechen_rel,
+             E = data$Against.all_rel, 
              Alab = "Lukashenko",
-             #Clab = "Dmitriev",
+             Clab = "Dmitriev",
              Blab = "Tsikhanouskaya",
-             #Dlab = "Cherechen",
+             Dlab = "Cherechen",
+             Elab = "Against all",
+             X=data$participation, Xlab="turnout") + 
+plot_scatter(A = data$Lukashenko_rel, 
+             C = data$Dmitriev_rel, 
+             B = data$Tsikhanouskaya_rel, 
+             D = data$Cherechen_rel,
+             E = data$Against.all_rel, 
+             Alab = "Lukashenko",
+             Clab = "Dmitriev",
+             Blab = "Tsikhanouskaya",
+             Dlab = "Cherechen",
+             Elab = "Against all",
              X=data$valid_votes_rel, Xlab="valid votes") + 
-  plot_scatter(A = data$Lukashenko_rel, 
+plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect") & 
+theme_BL(legend.position = "bottom")
+
+save_pdf("BLR20-scatter")
+
+
+plot_scatter_facet(A = data$Lukashenko_rel, 
              #C = data$Dmitriev_rel, 
              B = data$Tsikhanouskaya_rel, 
              #D = data$Cherechen_rel,
@@ -65,11 +137,6 @@ plot_scatter(A = data$Lukashenko_rel,
              Blab = "Tsikhanouskaya",
              #Dlab = "Cherechen",
              X=data$participation, Xlab="turnout") + 
-plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect") & 
-theme_BL(legend.position = "bottom")
-
-save_pdf("BLR20-scatter")
-
 plot_scatter_facet(A = data$Lukashenko_rel, 
              #C = data$Dmitriev_rel, 
              B = data$Tsikhanouskaya_rel, 
@@ -79,17 +146,8 @@ plot_scatter_facet(A = data$Lukashenko_rel,
              Blab = "Tsikhanouskaya",
              #Dlab = "Konopackaya",
              X=data$valid_votes_rel, Xlab="valid votes") + 
-plot_scatter_facet(A = data$Lukashenko_rel, 
-             #C = data$Dmitriev_rel, 
-             B = data$Tsikhanouskaya_rel, 
-             #D = data$Cherechen_rel,
-             Alab = "Lukashenko",
-             #Clab = "Dmitriev",
-             Blab = "Tsikhanouskaya",
-             #Dlab = "Cherechen",
-             X=data$participation, Xlab="turnout") + 
 plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect") & 
-theme_BL(legend.position = "bottom")
+theme_BL(legend.position = "none")
 
 save_pdf("BLR20-scatter_decompose")
 ```
@@ -129,17 +187,6 @@ plot_BL_RelFreq_bar(digits_on_position(vec, position = 4, na.rm = T), position =
 ```
 
 ## per candidate
-
-
-```{r dualplot}
-
-OMV(A)
-OOM(A)
-
-OMV(B)
-OOM(B)
-```
-
 
 ```{r dualplot}
 dualplot_BL_RelFreq_bar(A = digits(A, first = 1), A_title = A_title, 
@@ -187,74 +234,4 @@ dualplot_BL_RelFreq_bar(digits(A, last = 1), A_title,
                         last = T, max = 0.13)
 save_pdf("BLR20-dual-last_digits")
 ```
-
-```{r}
-both <- c(A,B)
-
-intervals <- list(
-  c(1, 10),
-  c(10, 100),
-  c(100, 1000),
-  c(1000, 10000)#,
-  #c(10000, 100000)
-)
-
-# Funkce pro výpočet procentuálního zastoupení číslic
-calculate_digit_percentages <- function(data, intervals, digits_on_position) {
-  results <- lapply(intervals, function(interval) {
-    interval_data <- data[data >= interval[1] & data < interval[2]]
-    digit_counts <- table(digits_on_position(interval_data, 1))
-    digit_percentages <- (digit_counts / length(interval_data))
-    overall_data <- length(interval_data)
-    list(digit_percentages = digit_percentages, overall_data = overall_data)
-  })
-  
-  results
-}
-
-# Výpočet procentuálního zastoupení číslic
-results <- calculate_digit_percentages(both, intervals, digits_on_position)
-
-# Vytvoření tabulky
-table <- tibble(
-  "Left Border Point" = sapply(intervals, function(x) x[1]),
-  "Right Border Point" = sapply(intervals, function(x) x[2]),
-  "Digit 1" = sapply(results, function(x) x$digit_percentages["1"]),
-  "Digit 2" = sapply(results, function(x) x$digit_percentages["2"]),
-  "Digit 3" = sapply(results, function(x) x$digit_percentages["3"]),
-  "Digit 4" = sapply(results, function(x) x$digit_percentages["4"]),
-  "Digit 5" = sapply(results, function(x) x$digit_percentages["5"]),
-  "Digit 6" = sapply(results, function(x) x$digit_percentages["6"]),
-  "Digit 7" = sapply(results, function(x) x$digit_percentages["7"]),
-  "Digit 8" = sapply(results, function(x) x$digit_percentages["8"]),
-  "Digit 9" = sapply(results, function(x) x$digit_percentages["9"]),
-  "# of Data points" = sapply(results, function(x) x$overall_data),
-  "% Overall Data" = (sapply(results, function(x) x$overall_data) / sum(sapply(results, function(x) x$overall_data))) * 100
-)
-
-table<- t(table)
-
-colnames(table) <- c("1", "2", "3", "4")
-table_dig<-table[-c(1,2,12,13),]
-
-table_dig <- data.frame(table_dig) |> mutate(digit = 1:9) 
-
-table_dig |> 
-  pivot_longer(cols = c("X1", "X2","X3", "X4"), names_to = 'order', values_to = 'relative frequency') |> 
-  ggplot(aes(x = digit, y = `relative frequency`)) + 
-  geom_bar(stat = 'identity', position = 'dodge', fill = barvy$VSE['darkpink']) + 
-  scale_x_continuous(n.breaks = 10) +
-  #ggtitle("Digital development pattern") + 
-  facet_grid(.~order, labeller = 
-               labeller(order = c(X1 = paste('1<=X<10\n', round(table[13,1],2), "%"), 
-                                  X2 = paste("10<=X<100\n",  round(table[13,2],2), "%"),
-                                  X3 = paste('100<=X<1000\n',  round(table[13,3],2), "%"),
-                                  X4 = paste("1000<=X<10000\n",  round(table[13,4],2), "%")
-                                  #X5 = paste('10000<=X<100000\n', round(table[13,5],2), "%")
-                                  ))) + theme_BL(legend.position = 'none') 
-
-save_pdf("BLR20-digital_development_pattern")
-
-```
-
 

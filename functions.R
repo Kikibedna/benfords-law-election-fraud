@@ -4,18 +4,19 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(patchwork)
+library(czso)
+
+# citation()
+# citation('readr')
+# citation('stringr')
+# citation('dplyr')
+# citation('ggplot2')
+# citation('tidyr')
+# citation('patchwork')
+# citation('czso')
+
 
 # load --------------
-# load_csv <- function(file_path){ # CSU data load and preprocess
-# data <- read_csv2(file_path, col_names = F)
-# nazev <- str_split_1(data[1,1]$X1, " ")[1]
-# data <- data[4:nrow(data),]
-# names(data) <- c(nazev, "Petr_Pavel", "Andrej_Babis")
-# data <- data |> mutate(Petr_Pavel = as.numeric(Petr_Pavel), 
-#                        Andrej_Babis = as.numeric(Andrej_Babis),
-#                        celkem = Petr_Pavel + Andrej_Babis)
-# return(data)
-# }
 
 # CSU data load and preprocess
 read_csv_czso <- function(path, type = 'counts'){
@@ -36,7 +37,7 @@ read_csv_czso <- function(path, type = 'counts'){
 }
 
 # process  -------------- 
-digits_on_position <- function(vec, position, na.rm = F){
+digits_on_position <- function(vec, position, na.rm = F){ # from vector of numbers to vector of digits in the corresponding position (numeric)
   result <- c()
   for(i in 1:length(vec)){
     result[i]<-as.numeric(str_split_i(as.character(vec[i]), pattern = "", position))
@@ -52,7 +53,7 @@ digits_on_position <- function(vec, position, na.rm = F){
   return(result)
 }
 
-digits <- function(vec, first=0, last=0){ # vec to first digit numeric vec
+digits <- function(vec, first=0, last=0){ # from vector of numbers to vector of digits in the first leading position (numeric)
   if(last>0){
     return(as.numeric(substr(as.character(vec),
                              start = nchar(as.character(vec)) - (last-1),
@@ -77,12 +78,12 @@ digits <- function(vec, first=0, last=0){ # vec to first digit numeric vec
 }
 
 
-P_BL_FD <- function(x){ # Probability of a digit / Benford's Law First Digit Law  
-  #X any number (1-999999) works
+P_BL_FD <- function(x){ # Probability of first significant digits / Benford's First Digit Law  
+  #works for any number (X = 1-999999) 
   log10(1 + 1/x)
 }
 
-P_BL_SD<-function(x){
+P_BL_SD<-function(x){ # Probability of second significant digits / Benford's Second Digit Law  
   vec <- c()
   for(i in 1:9){
     vec <- c(vec, log10(1+1/(10*i+x)))
@@ -91,7 +92,8 @@ P_BL_SD<-function(x){
   sum(vec)
 }
 
-P_BL_general <- function(position, X = NA){
+
+P_BL_general <- function(position, X = NA){ # Probability of any digit in any position / Benford's Law   
   if(position >= 5){
     data.frame(digit = 0:9,
                BL = 1/10)
@@ -110,10 +112,9 @@ P_BL_general <- function(position, X = NA){
   } else {
     return(table$BL[table$digit == X])
   }
-  
 }
 
-BL_general_digit_table <- function(vec, position){
+BL_general_digit_table <- function(vec, position){ # returns a frequency table of digits in given position with corresponding BL probabilities
   Total <- length(vec)
   data.frame(table('digit' = vec), Total) |> 
     mutate(RelFreq = Freq/Total, 
@@ -122,7 +123,7 @@ BL_general_digit_table <- function(vec, position){
     mutate(diff = RelFreq-BL)
 }
 
-BL_digits_table <- function(vec){
+BL_digits_table <- function(vec){# returns a frequency table of first significant digits with BL probabilities
   vec <- vec[vec>0]
   Total <- length(vec)
   data.frame(table('digit' = vec), Total) |> 
@@ -131,16 +132,7 @@ BL_digits_table <- function(vec){
            diff = RelFreq-BL)
 }
 
-BL_leading_digit_table <- function(vec){
-  vec <- vec[vec>0]
-  Total <- length(vec)
-  data.frame(table('digit' = vec), Total) |> 
-    mutate(RelFreq = Freq/Total, 
-           BL = P_BL_FD(as.numeric(as.character(digit))),
-           diff = RelFreq-BL)
-}
-
-BL_last_digit_table <- function(vec){
+BL_last_digit_table <- function(vec){# returns a frequency table of last digits with BL probabilities
   len <- str_length(as.character(vec[1])) 
   Total <- length(vec)
   data.frame(table('digit' = vec), Total) |> 
@@ -150,7 +142,7 @@ BL_last_digit_table <- function(vec){
 }
 
 
-# analyze 
+# analyze -------------------
 print.OMV <- function(x, ...) {
   cat("\n", x$method, "\n\n")
   cat("90th quantile: ", x$log90th)
@@ -168,7 +160,7 @@ print.OOM <- function(x, ...) {
 }
 
 
-OMV <- function(X){ # OMV > 3 condition to use first digit BL 
+OMV <- function(X){ # OMV > 3 condition to use BL 
   X <- X[!is.na(X) & !X == 0] 
   log90th <- unname(log10(quantile(X, 0.9)))
   log10th <- unname(log10(quantile(X, 0.1)))
@@ -181,7 +173,7 @@ OMV <- function(X){ # OMV > 3 condition to use first digit BL
   return(result)
 }
 
-OOM <- function(X){ # OMV > 3 condition to use first digit BL 
+OOM <- function(X){ # OOM is a less strict OMV, outliers must be removed before the analysis 
   X <- X[!is.na(X) & !X == 0] 
   log10max <- unname(log10(max(X)))
   log10min <- unname(log10(min(X)))
@@ -194,7 +186,7 @@ OOM <- function(X){ # OMV > 3 condition to use first digit BL
   return(result)
 }
 
-compliance_test_chisq <- function(BL_table, hints = F){
+compliance_test_chisq <- function(BL_table, hints = F){ # Goodness of fit test used for assessing the compliance of data with BL 
   if(!prod(BL_table$Freq > 5)){
     #stop("Assumption of the test `n · πd > 5 for all d` is not met.")
     return(data.frame(p.value = "unreliable"))
@@ -207,23 +199,65 @@ compliance_test_chisq <- function(BL_table, hints = F){
   chisq.test(x=BL_table$Freq, p=BL_table$BL, rescale.p = F)
 }
 
+# digital development pattern 
+intervals <- list(
+  '1' = c(1, 10),
+  '2' = c(10, 100),
+  '3' = c(100, 1000),
+  '4' = c(1000, 10000),
+  '5' = c(10000, 100000), 
+  '6' = c(100000, 1000000), 
+  '7' = c(1000000, 10000000)
+)
+
+calculate_digit_percentages <- function(data, intervals, digits_on_position) {# 
+  results <- lapply(intervals, function(interval) {
+    interval_data <- data[data >= interval[1] & data < interval[2]]
+    digit_counts <- table(digits_on_position(interval_data, 1))
+    digit_percentages <- (digit_counts / length(interval_data))
+    overall_data <- length(interval_data)
+    list(digit_percentages = digit_percentages, overall_data = overall_data)
+  })
+  
+  results
+}
+
+ddp_table <- function(intervals, data){ #digital development pattern table - relative frequencies of digits from numbers in intervals based on their integral powers of ten 
+  results <- calculate_digit_percentages(data, intervals, digits_on_position)
+  table <- tibble(
+    "Left Border Point" = sapply(intervals, function(x) x[1]),
+    "Right Border Point" = sapply(intervals, function(x) x[2]),
+    "Digit 1" = sapply(results, function(x) x$digit_percentages["1"]),
+    "Digit 2" = sapply(results, function(x) x$digit_percentages["2"]),
+    "Digit 3" = sapply(results, function(x) x$digit_percentages["3"]),
+    "Digit 4" = sapply(results, function(x) x$digit_percentages["4"]),
+    "Digit 5" = sapply(results, function(x) x$digit_percentages["5"]),
+    "Digit 6" = sapply(results, function(x) x$digit_percentages["6"]),
+    "Digit 7" = sapply(results, function(x) x$digit_percentages["7"]),
+    "Digit 8" = sapply(results, function(x) x$digit_percentages["8"]),
+    "Digit 9" = sapply(results, function(x) x$digit_percentages["9"]),
+    "# of Data points" = sapply(results, function(x) x$overall_data),
+    "% Overall Data" = (sapply(results, function(x) x$overall_data) / sum(sapply(results, function(x) x$overall_data))) * 100)
+  
+  table <- t(table)
+  colnames(table) <- as.character(1:length(intervals))
+  return(table)
+}
+
 
 # graphics  --------------
 
 barvy <- list(
   leading_digits = c(
-    BL =  "#b1c7c3", #'#cccccc',
-    RelFreq = '#009881'#'darkblue'
-  ),
-  last_digits = c(
-    BL = '#cccccc',
-    RelFreq = '#7F1734'
+    BL =  "#B3C6E7", 
+    RelFreq = 'darkblue'
   ),
   scatter = c(
     'A' = '#009881',
     'B' = '#A50063', 
     'C' = "#F05A22", 
-    'D' = '#00AEEF'
+    'D' = '#00AEEF', 
+    'E' = '#00659B'
   ), 
   VSE = c(green = "#009881",
           aqua = "#6AD1E3",
@@ -236,41 +270,17 @@ barvy <- list(
   )
 )
 
-# barvy <- list(
-#   leading_digits = c(
-#     BL = "#b1c7c3",#'#cccccc',
-#     RelFreq = '#009881'#"#009881"#'darkblue'
-#   ),
-#   last_digits = c(
-#     BL = '#cccccc',
-#     RelFreq = '#A50063'#"#A50063" #'#7F1734'
-#   ), 
-#     scatter = c(
-#       'Petr_Pavel_rel' = '#009881',
-#       'Andrej_Babis_rel' = '#A50063'
-#   ), 
-#   VSE = c(green = "#009881",
-#             aqua = "#6AD1E3",
-#             gray = "#dddddd", 
-#             darkpink = "#A50063",
-#             pink = "#EC298A",
-#             blue = "#00659B", 
-#             lightblue = "#00AEEF",
-#             orange = "#F05A22" 
-#   )
-# )
-
 save_pdf <- function(name, plot = last_plot(), width = 18, height = 9) {
   base_dir <- getwd()
   img_dir <- config::get("graphics") 
   pth <- file.path(base_dir, img_dir, paste0(name, ".pdf"))
   ggsave(plot = plot, 
          filename = pth, 
-         device = "pdf",  # optional, since ggsave infers from .pdf
+         device = "pdf",  
          width = width, height = height, units = "cm", dpi = 300)
 }
 
-save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady by se hodilo dat credit do prace... 
+save_png <- function(name, plot = last_plot(), width = 18, height = 9) {  
   base_dir <- getwd()
   img_dir <- config::get("graphics") 
   pth <- file.path(base_dir, img_dir, paste0(name, ".png"))
@@ -280,44 +290,25 @@ save_png <- function(name, plot = last_plot(), width = 18, height = 9) { #tady b
          width = width, height = height, units = "cm", dpi = 300)
 }
 
-# corr matrix upper panel as numeric, not scatter, usage: pairs(X, upper.panel = panel.cor)
-panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...) {
-  usr <- par("usr")
-  on.exit(par(usr))
-  par(usr = c(0, 1, 0, 1))
-  Cor <- cor(x, y) # Remove abs function if desired
-  txt <- paste0(prefix, format(c(Cor, 0.123456789), digits = digits)[1])
-  if(missing(cex.cor)) {
-    cex.cor <- 0.7
-  }
-  text(0.5, 0.5, txt,
-       cex = 1 + cex.cor) # Resize the text by level of correlation
-}
-
 theme_BL <- function(legend.position, text.size = 12, subtitle.text.size = 10, ...){
   theme_minimal() + theme(legend.position = legend.position, 
         legend.box.just = "right",
-        #legend.box.background = element_rect(fill = "white", color="white", size=3), 
         text=element_text(size=text.size, family="serif"), 
         plot.subtitle = element_text(size = subtitle.text.size, hjust = 0.98), 
         plot.caption = element_text(size = subtitle.text.size, hjust = 1), 
         plot.caption.position = "plot", 
-        # panel.background = element_rect(fill = '#ffffff', color = "#ffffff"),
-        # panel.grid.major = element_line(color = '#dddddd'), #, linetype = 'dotted'
-        # panel.grid.minor = element_line(color = '#dddddd'), 
         plot.background = element_rect(fill = "#ffffff", color = "#ffffff"),
         panel.background = element_rect(fill = "#eeeeee", color = "#eeeeee"),
         panel.grid.major = element_line(color = '#ffffff'), #, linetype = 'dotted'
         panel.grid.minor = element_line(color = '#ffffff'))
 }
 
-
 plot_BL_RelFreq_bar <- function(vec, last = F, dual = F, position = F, legend.position = "bottom", 
-                                caption = NULL, 
-                                title = NULL){
+                                caption = NULL, title = NULL){
   
   colors = barvy$leading_digits
   
+  # frequency table, BL  
   if(as.logical(position)){
     BL_table <- BL_general_digit_table(vec, position)
   } else if(last){
@@ -327,16 +318,16 @@ plot_BL_RelFreq_bar <- function(vec, last = F, dual = F, position = F, legend.po
   }
   BL_table <- BL_table |> mutate(digit = as.numeric(as.character(digit))) |> 
     select(-diff)
-
   
+  # p-value, compliance test 
   test <- compliance_test_chisq(BL_table)
-  if(test$p.value == "unreliable"){
+  if(test$p.value == "unreliable"){ #for n_k < 5 is the goodness of fit test p-value unrealiable
     subtitle.text <- "Goodness of fit test p-value: unreliable"
   } else {
     subtitle.text <- paste("Goodness of fit test p-value:", round(test$p.value, 5))
   }
   
-  max <- max(c(BL_table$RelFreq,BL_table$BL)) + max(c(BL_table$RelFreq,BL_table$BL))/10
+  max <- max(c(BL_table$RelFreq,BL_table$BL)) + max(c(BL_table$RelFreq,BL_table$BL))/10 #determining the axes 
   
   n.breaks <- case_when(
     log10(max(BL_table$digit)+1) <= 1 ~ 10, 
@@ -345,6 +336,7 @@ plot_BL_RelFreq_bar <- function(vec, last = F, dual = F, position = F, legend.po
     T ~ 100, 
   )
   
+  # BL bar plot with p-value
   BL_table |> 
     pivot_longer(cols = c("BL", "RelFreq"), names_to = "law", values_to = 'relative frequency') |> 
     ggplot(aes(x=digit, y=`relative frequency`, fill = as.factor(law))) + 
@@ -360,18 +352,27 @@ plot_BL_RelFreq_bar <- function(vec, last = F, dual = F, position = F, legend.po
     theme_BL(legend.position = legend.position)
 }
 
-dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F, position = F){
+# dual plot for two candidates, two BL bar plots 
+dualplot_BL_RelFreq_bar <- function(A, A_title, B, B_title, max = 0.32, last = F, position = F, legend.position = 'bottom'){
+  #two plots 
   plot_BL_RelFreq_bar(A, title = A_title, last = last, dual = T, position = position) + 
-    plot_BL_RelFreq_bar(B, title = B_title, last = last, dual = T, position = position) + 
+  plot_BL_RelFreq_bar(B, title = B_title, last = last, dual = T, position = position) + 
+  
+  #patchwork 
     plot_layout(guides = 'collect', axes = "collect", axis_titles = "collect_y") & 
-    theme(legend.position = 'bottom', plot.title = element_text(hjust = 0.5, size=12)) & 
+    theme(legend.position = legend.position, plot.title = element_text(hjust = 0.5, size=12)) & 
     ylim(0, max)
 }
 
-plot_scatter<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NULL, D=NULL, Dlab =NULL){
-  if(!is.null(C) & !is.null(D)){
-    data.frame(A,B,C,D,X) |> 
-      pivot_longer(cols = c(A, B,C,D), 
+# scatterplots with correlation, 
+plot_scatter<-function(A,B,Alab,Blab, # the main two candidates 
+                       X,Xlab,        # other variable
+                       colors=barvy$scatter, 
+                       C=NULL,Clab=NULL,D=NULL,Dlab=NULL,E=NULL,Elab=NULL #other candidates
+                       ){
+  if(!is.null(C) & !is.null(D) & !is.null(E)){  # all candidates in Belarus 
+    data.frame(A,B,C,D,E,X) |> 
+      pivot_longer(cols = c(A,B,C,D,E), 
                    values_to = "votes", names_to = "candidate")  |> 
       ggplot(aes(x = X, y = votes, color = candidate)) + 
       geom_point(alpha = 0.1) + 
@@ -379,16 +380,17 @@ plot_scatter<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NU
                          labels = c(A = Alab,
                                     B = Blab,
                                     C = Clab,
-                                    D = Dlab),
+                                    D = Dlab, 
+                                    E = Elab),
                          name = NULL) + 
       labs(subtitle =
              paste("Correlation: ",
-                   round(cor(c(A,B,C,D),
-                             c(X,X,X,X),
+                   round(cor(c(A,B,C,D,E), # corr label for all points
+                             c(X,X,X,X,X),
                              use = "complete.obs"), 2)
              )
       ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
-  }else{
+  }else{ #only two candidates (Czechia and Belarus)
     data.frame(A,B,X) |> 
       pivot_longer(cols = c(A, B), 
                    values_to = "votes", names_to = "candidate")  |> 
@@ -400,7 +402,7 @@ plot_scatter<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NU
                          name = NULL) + 
       labs(subtitle =
              paste("Correlation: ",
-                   round(cor(c(A,B),
+                   round(cor(c(A,B),# corr label for all points
                              c(X,X),
                              use = "complete.obs"), 2)
              )
@@ -408,6 +410,7 @@ plot_scatter<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NU
   }
 }
 
+# scatterplots for each candidate
 plot_scatter_facet<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,Clab=NULL, D=NULL, Dlab =NULL){
   if(!is.null(C) & !is.null(D)){
     data.frame(A,B,C,D,X) |> 
@@ -424,7 +427,7 @@ plot_scatter_facet<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,C
                                     D = Dlab),
                          name = NULL) + 
       labs(subtitle = 
-             paste(Alab, "correlation: ", 
+             paste(Alab, "correlation: ",  # corr label per candidate 
                    round(cor(X, 
                              A, 
                              use = "complete.obs"), 2), "\n",
@@ -454,7 +457,7 @@ plot_scatter_facet<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,C
                                     B = Blab),
                          name = NULL) + 
       labs(subtitle = 
-             paste(Alab, "correlation: ", 
+             paste(Alab, "correlation: ", # corr label per candidate
                    round(cor(X, 
                              A, 
                              use = "complete.obs"), 2), "\n",
@@ -466,84 +469,3 @@ plot_scatter_facet<-function(A,B,Alab,Blab,X,Xlab,colors=barvy$scatter, C=NULL,C
       ) + xlab(Xlab) + theme_BL(legend.position = "bottom")
   }
 }
-
-
-sample_barvy<-c(
-        # barvy, co se mi libi
-         "#aaaaaa","#7F1734", # last digits 
-         "#cccccc","darkblue", # first digits
-         "black","cornflowerblue", 
-         
-        # skolni / fakultni barvy
-         "#dddddd", "#009881", "#6AD1E3",
-         "#dddddd", "#A50063", "#EC298A",
-         "#dddddd", "#00659B", "#00AEEF",
-         "#F05A22" 
-         )
-
-
-# Sample workflow ------------
-
-# OMV(data$total_votes)
-# OOM(data$total_votes)
-# 
-# first_digits <- digits(data$total_votes, first = 1)
-# BL_leading_digit_table(first_digits)
-# compliance_test_chisq(first_digits)
-# plot_BL_RelFreq_bar(first_digits)
-# save_png("USA24-celkem-first_digits")
-# 
-# last_digits <- digits(data$total_votes, last = 1)
-# BL_last_digit_table(last_digits)
-# compliance_test_chisq(last_digits, last = T)
-# plot_BL_RelFreq_bar(last_digits, last = T)
-# save_png("USA24-celkem-last_digits")
-# 
-# first_two_digits <- digits(data$total_votes, first = 2)
-# BL_leading_digit_table(first_two_digits)
-# compliance_test_chisq(first_two_digits)
-# plot_BL_RelFreq_bar(first_two_digits)
-# save_png("USA24-celkem-first_two_digits")
-# 
-# last_two_digits <- digits(data$total_votes, last = 2)
-# BL_last_digit_table(last_two_digits)
-# compliance_test_chisq(last_two_digits, last = T)
-# plot_BL_RelFreq_bar(last_two_digits, last = T)
-# save_png("USA24-celkem-last_two_digits")
-# 
-# 
-# OMV(data$votes_dem)
-# OOM(data$votes_dem)
-# 
-# OMV(data$votes_gop)
-# OOM(data$votes_gop)
-# 
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 1), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, first = 1), B_title = "Democrats", 
-#                         last = F)
-# save_png("USA24-dual-first_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, first = 2), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, first = 2), B_title = "Democrats", 
-#                         last = F, max = 0.052)
-# save_png("USA24-dual-first_two_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 1), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, last = 1), B_title = "Democrats", 
-#                         last = T, max = 0.12)
-# save_png("USA24-dual-last_digits")
-# 
-# dualplot_BL_RelFreq_bar(A = digits(data$votes_gop, last = 2), A_title = "Republicans", 
-#                         B = digits(data$votes_dem, last = 2), B_title = "Democrats", 
-#                         last = T, max = 0.0155)
-# save_png("USA24-dual-last_two_digits")
-
-
-
-
-
-
-# testing ------------
-
-
