@@ -1,14 +1,16 @@
 # Benford's Law and the Statistical Detection of Election Fraud
 
+This repository was created as an part of author's bachelor thesis. 
+In this thesis, the author explores the applicability of Benford’s Law as a forensic tool for detecting anomalies in electoral data, with Benford's Law as a part of a designed reproducible methodology, as can be seen in an implementation in R in this repository. 
+
 This repository contains the following: 
-- `functions.R` file with all the functions used, macros and settings 
+- `functions.R` file with all the functions used  
 - `.qmd` files for all three analysed countries (Belarus, the USA and Czechia) 
 - `data-input` directory, with data for the analysis 
 - `fig` directory contains the created outputs of the analysis (.pdf figures)
 - `outputs` directory contains exported tables (.csv files)
 - `config.yml` file with the repository setup 
 
-This repository was created as an additional part of author's bachelor thesis. 
 
 `data-input` is not shared, due to copyright issues. However, the data used is described below: 
 - [Czechia](https://www.volby.cz/pls/prez2023nss/pe71?xjazyk=EN#/0-01-2023-0), downloaded from [volby.cz](https://www.volby.cz/pls/prez2023nss/pe71?xjazyk=EN#/0-01-2023-0) on 2025-04-18, by the Czech Statistical Office 
