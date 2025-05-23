@@ -12,8 +12,10 @@ source(cfg$library)
 data <- read.csv(file.path(cfg$data, "Belarus-2020", "Protocol_data.csv"))
 
 # preprocessing 
+
 data<-data |> mutate(
   participation = Number.of.voters.who.took.part.in.the.vote/Total.number.of.voters, 
+
 #relative vote counts per polling station 
   Lukashenko_rel= Lukashenko/Total.number.of.voters, 
   Dmitriev_rel = Dmitriev/Total.number.of.voters, 
@@ -21,6 +23,7 @@ data<-data |> mutate(
   Cherechen_rel = Cherechen/Total.number.of.voters, 
   Konopackaya_rel = Konopackaya/Total.number.of.voters,
   Against.all_rel = Against.all/Total.number.of.voters, 
+
 # NA -> 0 
   Number.of.ballots.declared.invalid = 
    ifelse(is.na(Number.of.ballots.declared.invalid), 0, Number.of.ballots.declared.invalid), 
@@ -28,6 +31,7 @@ data<-data |> mutate(
    ifelse(is.na(Number.of.spoiled.ballots), 0, Number.of.spoiled.ballots), 
   Number.of.unused.ballots = 
    ifelse(is.na(Number.of.unused.ballots), 0, Number.of.unused.ballots), 
+
 # valid votes 
   valid_votes_rel = (Total.number.of.voters-
                       Number.of.ballots.declared.invalid-
